@@ -223,6 +223,155 @@ export async function enrichToolResultWithLsp(
   }
 }
 
+/** Result of batch-enriching a read_many_files tool output. */
+export interface LspBatchEnrichmentResult {
+  /** XML-tagged symbol + diagnostic blocks appended per file. */
+  llmAppendix: string;
+  /** Aggregated footer across all enriched files. */
+  displayFooter?: DisplayFooter;
+}
+
+/** Default per-invocation cap on how many files read_many_files enriches. */
+export const DEFAULT_READ_MANY_FILES_LSP_BUDGET = 10;
+
+/**
+ * Enrich a read_many_files tool result with LSP data. For each file the
+ * server covers (up to `budget`), append symbol index + diagnostic blocks
+ * to llmAppendix and tally counts into an aggregated footer. Files past
+ * the budget are marked with an `<lsp_truncated>` sentinel so the model
+ * knows absence-of-issues is not clean-by-absence.
+ *
+ * Files without a configured language server are excluded from both the
+ * budget and the footer — LSP can't say anything about them.
+ */
+export async function enrichReadManyWithLsp(
+  config: Config,
+  filePaths: string[],
+  signal?: AbortSignal,
+  budget: number = DEFAULT_READ_MANY_FILES_LSP_BUDGET,
+): Promise<LspBatchEnrichmentResult> {
+  if (!config.isLspEnabled?.()) return { llmAppendix: '' };
+
+  try {
+    const lspMgr = await config.getLspManager();
+    if (!lspMgr) return { llmAppendix: '' };
+
+    const coveredFiles = filePaths.filter((f) => lspMgr.hasServerFor(f));
+    if (coveredFiles.length === 0) return { llmAppendix: '' };
+
+    const toEnrich = coveredFiles.slice(0, budget);
+    const skippedCount = coveredFiles.length - toEnrich.length;
+
+    const perFileResults = await Promise.all(
+      toEnrich.map(async (filePath) => {
+        try {
+          const fullContent = await fs.readFile(filePath, 'utf-8');
+          const diagResult = await lspMgr.getDiagnostics(
+            filePath,
+            fullContent,
+            signal,
+          );
+          const symbols = await lspMgr.getDocumentSymbols(filePath);
+          return {
+            filePath,
+            diagnostics: diagResult.diagnostics,
+            timedOut: diagResult.timedOut,
+            symbols,
+          };
+        } catch {
+          return {
+            filePath,
+            diagnostics: [] as Diagnostic[],
+            timedOut: false,
+            symbols: [] as DocumentSymbol[] | SymbolInformation[],
+          };
+        }
+      }),
+    );
+
+    let llmAppendix = '';
+    let totalErrors = 0;
+    let totalWarnings = 0;
+    let totalInfos = 0;
+    let timeoutCount = 0;
+    const filesWithIssues = new Set<string>();
+
+    for (const r of perFileResults) {
+      if (r.symbols.length > 0) {
+        llmAppendix += formatSymbolSummary(r.symbols, r.filePath);
+      }
+      if (r.diagnostics.length > 0) {
+        llmAppendix += formatDiagnostics(r.diagnostics, r.filePath);
+        filesWithIssues.add(r.filePath);
+      }
+      for (const d of r.diagnostics) {
+        const sev = d.severity ?? DiagnosticSeverity.Error;
+        if (sev === DiagnosticSeverity.Error) totalErrors++;
+        else if (sev === DiagnosticSeverity.Warning) totalWarnings++;
+        else totalInfos++;
+      }
+      if (r.timedOut && r.diagnostics.length === 0) timeoutCount++;
+    }
+
+    if (skippedCount > 0) {
+      llmAppendix += `\n\n<lsp_truncated reason="budget" count="${skippedCount}"/>`;
+    }
+
+    return {
+      llmAppendix,
+      displayFooter: buildBatchFooter({
+        totalErrors,
+        totalWarnings,
+        totalInfos,
+        timeoutCount,
+        filesWithIssuesCount: filesWithIssues.size,
+      }),
+    };
+  } catch {
+    return { llmAppendix: '' };
+  }
+}
+
+function buildBatchFooter(stats: {
+  totalErrors: number;
+  totalWarnings: number;
+  totalInfos: number;
+  timeoutCount: number;
+  filesWithIssuesCount: number;
+}): DisplayFooter {
+  const { totalErrors, totalWarnings, totalInfos, timeoutCount } = stats;
+  const diagParts: string[] = [];
+  if (totalErrors > 0)
+    diagParts.push(`${totalErrors} error${totalErrors !== 1 ? 's' : ''}`);
+  if (totalWarnings > 0)
+    diagParts.push(`${totalWarnings} warning${totalWarnings !== 1 ? 's' : ''}`);
+  if (totalInfos > 0) diagParts.push(`${totalInfos} info`);
+
+  if (diagParts.length === 0) {
+    if (timeoutCount > 0) {
+      return {
+        text: `LSP: ${timeoutCount} server${timeoutCount !== 1 ? 's' : ''} timed out`,
+        severity: 'warning',
+      };
+    }
+    return { text: 'LSP: no issues found', severity: 'success' };
+  }
+
+  const filesCount = stats.filesWithIssuesCount;
+  const across =
+    filesCount > 0
+      ? ` across ${filesCount} file${filesCount !== 1 ? 's' : ''}`
+      : '';
+  const timeoutSuffix =
+    timeoutCount > 0
+      ? `, ${timeoutCount} server${timeoutCount !== 1 ? 's' : ''} timed out`
+      : '';
+  return {
+    text: `LSP: ${diagParts.join(', ')}${across}${timeoutSuffix}`,
+    severity: totalErrors > 0 ? 'error' : 'warning',
+  };
+}
+
 /**
  * Enrich a read_file tool result with LSP data: document symbols and
  * pre-existing diagnostics.

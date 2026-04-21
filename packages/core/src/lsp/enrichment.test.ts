@@ -5,8 +5,13 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { buildLspFooter } from './enrichment.js';
+import {
+  buildLspFooter,
+  enrichReadManyWithLsp,
+  DEFAULT_READ_MANY_FILES_LSP_BUDGET,
+} from './enrichment.js';
 import { DiagnosticSeverity, type Diagnostic } from './types.js';
+import type { Config } from '../config/config.js';
 
 const mkDiag = (severity: DiagnosticSeverity): Diagnostic => ({
   range: { start: { line: 0, character: 0 }, end: { line: 0, character: 1 } },
@@ -65,5 +70,37 @@ describe('buildLspFooter', () => {
     const footer = buildLspFooter([mkDiag(DiagnosticSeverity.Error)], true);
     expect(footer.severity).toBe('error');
     expect(footer.text).toBe('LSP: 1 error');
+  });
+});
+
+describe('enrichReadManyWithLsp', () => {
+  const mkDisabledConfig = (): Config =>
+    ({
+      isLspEnabled: () => false,
+    }) as unknown as Config;
+
+  it('returns an empty appendix when LSP is disabled', async () => {
+    const result = await enrichReadManyWithLsp(mkDisabledConfig(), [
+      '/a.ts',
+      '/b.ts',
+    ]);
+    expect(result.llmAppendix).toBe('');
+    expect(result.displayFooter).toBeUndefined();
+  });
+
+  it('returns an empty appendix when getLspManager resolves undefined', async () => {
+    const config = {
+      isLspEnabled: () => true,
+      getLspManager: async () => undefined,
+    } as unknown as Config;
+    const result = await enrichReadManyWithLsp(config, ['/a.ts']);
+    expect(result.llmAppendix).toBe('');
+    expect(result.displayFooter).toBeUndefined();
+  });
+
+  it('uses the documented default budget', () => {
+    // Guard against an accidental change to the exported constant. Other
+    // callers (docs, tests) depend on the value.
+    expect(DEFAULT_READ_MANY_FILES_LSP_BUDGET).toBe(10);
   });
 });
