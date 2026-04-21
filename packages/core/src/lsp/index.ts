@@ -15,10 +15,13 @@ export {
   buildLspFooter,
   enrichToolResultWithLsp,
   enrichReadWithLsp,
+  enrichReadManyWithLsp,
+  DEFAULT_READ_MANY_FILES_LSP_BUDGET,
 } from './enrichment.js';
 export type {
   CollectedDiagnostics,
   LspEnrichmentResult,
+  LspBatchEnrichmentResult,
 } from './enrichment.js';
 export type {
   LspSettings,
