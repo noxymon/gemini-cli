@@ -53,4 +53,5 @@ export interface CoreToolSet {
   read_mcp_resource: FunctionDeclaration;
   list_mcp_resources: FunctionDeclaration;
   update_topic?: FunctionDeclaration;
+  lsp_query: FunctionDeclaration;
 }

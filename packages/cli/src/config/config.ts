@@ -995,6 +995,9 @@ export async function loadCliConfig(
     experimentalMemoryV2: settings.experimental?.memoryV2,
     experimentalAutoMemory: settings.experimental?.autoMemory,
     contextManagement,
+    lspEnabled: settings.tools?.lsp?.enabled,
+    lspDiagnosticTimeout: settings.tools?.lsp?.diagnosticTimeout,
+    lspServers: settings.tools?.lsp?.servers,
     modelSteering: settings.experimental?.modelSteering,
     topicUpdateNarration:
       settings.general?.topicUpdateNarration ??
