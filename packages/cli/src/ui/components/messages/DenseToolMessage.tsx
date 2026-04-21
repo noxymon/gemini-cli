@@ -259,23 +259,18 @@ function getGenericSuccessData(
   return { description, summary, payload };
 }
 
-const DenseFooterLine: React.FC<{ footer: DisplayFooter }> = ({ footer }) => {
-  const color =
-    footer.severity === 'error'
-      ? theme.status.error
-      : footer.severity === 'warning'
-        ? theme.status.warning
-        : footer.severity === 'success'
-          ? theme.status.success
-          : theme.text.secondary;
-  return (
-    <Box marginLeft={2} flexDirection="row">
-      <Text color={color} dimColor={footer.severity === 'success'}>
-        {footer.text}
-      </Text>
-    </Box>
-  );
-};
+function footerColor(footer: DisplayFooter): string {
+  switch (footer.severity) {
+    case 'error':
+      return theme.status.error;
+    case 'warning':
+      return theme.status.warning;
+    case 'success':
+      return theme.status.success;
+    default:
+      return theme.text.secondary;
+  }
+}
 
 export const DenseToolMessage: React.FC<DenseToolMessageProps> = (props) => {
   const {
@@ -492,6 +487,22 @@ export const DenseToolMessage: React.FC<DenseToolMessageProps> = (props) => {
             {summary}
           </Box>
         )}
+        {displayFooter && (
+          <Box
+            key="tool-footer"
+            marginLeft={1}
+            flexGrow={0}
+            flexDirection="row"
+          >
+            <Text color={theme.text.secondary}>· </Text>
+            <Text
+              color={footerColor(displayFooter)}
+              dimColor={displayFooter.severity === 'success'}
+            >
+              {displayFooter.text}
+            </Text>
+          </Box>
+        )}
       </Box>
 
       {showPayload && isAlternateBuffer && diffLines.length > 0 && (
@@ -543,8 +554,6 @@ export const DenseToolMessage: React.FC<DenseToolMessageProps> = (props) => {
           </Text>
         </Box>
       )}
-
-      {displayFooter && <DenseFooterLine footer={displayFooter} />}
     </Box>
   );
 };
