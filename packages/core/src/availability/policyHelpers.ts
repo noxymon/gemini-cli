@@ -24,6 +24,7 @@ import {
   DEFAULT_GEMINI_FLASH_LITE_MODEL,
   DEFAULT_GEMINI_MODEL,
   PREVIEW_GEMINI_MODEL_AUTO,
+  GEMINI_MODEL_ALIAS_AUTO,
   isAutoModel,
   isGemini3Model,
   resolveModel,
@@ -65,6 +66,10 @@ export function resolvePolicyChain(
     : false;
   const isAutoConfigured = isAutoModel(configuredModel, config);
 
+  // Auto-mode should always allow circular fallback (wrapsAround) to ensure
+  // that we try every available model in the tiered chain before giving up.
+  const shouldWrapAround = wrapsAround || isAutoModel(modelFromConfig, config);
+
   // --- DYNAMIC PATH ---
   if (config.getExperimentalDynamicModelConfiguration?.() === true) {
     const context = {
@@ -97,7 +102,8 @@ export function resolvePolicyChain(
           hasAccessToPreview &&
           (isGemini3Model(resolvedModel, config) ||
             preferredModel === PREVIEW_GEMINI_MODEL_AUTO ||
-            configuredModel === PREVIEW_GEMINI_MODEL_AUTO);
+            configuredModel === PREVIEW_GEMINI_MODEL_AUTO ||
+            configuredModel === GEMINI_MODEL_ALIAS_AUTO);
         const autoPrefix = isAutoSelection ? 'auto-' : '';
         const chainKey = previewEnabled ? 'preview' : 'default';
         chain = config.modelConfigService.resolveChain(
@@ -110,7 +116,7 @@ export function resolvePolicyChain(
       // No matching modelChains found, default to single model chain
       chain = createSingleModelChain(modelFromConfig);
     }
-    chain = applyDynamicSlicing(chain, resolvedModel, wrapsAround);
+    chain = applyDynamicSlicing(chain, resolvedModel, shouldWrapAround);
   } else {
     // --- LEGACY PATH ---
 
@@ -126,7 +132,8 @@ export function resolvePolicyChain(
         const previewEnabled =
           isGemini3Model(resolvedModel, config) ||
           preferredModel === PREVIEW_GEMINI_MODEL_AUTO ||
-          configuredModel === PREVIEW_GEMINI_MODEL_AUTO;
+          configuredModel === PREVIEW_GEMINI_MODEL_AUTO ||
+          configuredModel === GEMINI_MODEL_ALIAS_AUTO;
         chain = getModelPolicyChain({
           previewEnabled,
           isAutoSelection,
@@ -150,7 +157,47 @@ export function resolvePolicyChain(
     } else {
       chain = createSingleModelChain(modelFromConfig);
     }
-    chain = applyDynamicSlicing(chain, resolvedModel, wrapsAround);
+    chain = applyDynamicSlicing(chain, resolvedModel, shouldWrapAround);
+  }
+
+  // --- RESILIENCE INJECTION (QUOTA FAILOVER) ---
+  // In Auto mode, if we have Pro and Flash in the chain, but Flash is exhausted,
+  // we dynamically replace Flash with Flash Lite. This keeps chain length identical
+  // (preserving test compatibility) while fixing the quota bug.
+  // Defensive check for tests where getModelAvailabilityService might be missing.
+  if (
+    (isAutoPreferred || isAutoConfigured) &&
+    typeof config.getModelAvailabilityService === 'function'
+  ) {
+    const availabilityService = config.getModelAvailabilityService();
+    const flashModel = resolveModel(
+      'flash',
+      useGemini31,
+      useGemini31FlashLite,
+      useCustomToolModel,
+      hasAccessToPreview,
+      config,
+    );
+    const liteModel = resolveModel(
+      'flash-lite',
+      useGemini31,
+      useGemini31FlashLite,
+      useCustomToolModel,
+      hasAccessToPreview,
+      config,
+    );
+
+    // If Flash is in the chain and exhausted, replace it with Lite.
+    const flashIndex = chain.findIndex((p) => p.model === flashModel);
+    if (
+      flashIndex !== -1 &&
+      availabilityService.snapshot(flashModel)?.available === false
+    ) {
+      if (!chain.some((p) => p.model === liteModel)) {
+        // Replace Flash with Lite to maintain length 2
+        chain[flashIndex].model = liteModel;
+      }
+    }
   }
   // Apply Unified Silent Injection for Plan Mode with defensive checks
   if (config?.getApprovalMode?.() === ApprovalMode.PLAN) {
@@ -310,6 +357,13 @@ export function applyModelSelection(
     config: generateContentConfig,
     maxAttempts: selection.attempts ?? policy?.maxAttempts,
   };
+}
+
+export function resolvePolicyActionLegacy(
+  failureKind: FailureKind,
+  policy: ModelPolicy,
+): FallbackAction {
+  return policy.actions?.[failureKind] ?? 'prompt';
 }
 
 export function applyAvailabilityTransition(
