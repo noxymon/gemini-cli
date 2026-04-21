@@ -8,6 +8,7 @@ import {
   type ToolCall,
   type SerializableConfirmationDetails,
   type ToolResultDisplay,
+  type DisplayFooter,
   debugLogger,
   CoreToolCallStatus,
   type SubagentActivityItem,
@@ -63,6 +64,7 @@ export function mapToDisplay(
     };
 
     let resultDisplay: ToolResultDisplay | undefined = undefined;
+    let displayFooter: DisplayFooter | undefined = undefined;
     let confirmationDetails: SerializableConfirmationDetails | undefined =
       undefined;
     let outputFile: string | undefined = undefined;
@@ -75,11 +77,13 @@ export function mapToDisplay(
     switch (call.status) {
       case CoreToolCallStatus.Success:
         resultDisplay = call.response.resultDisplay;
+        displayFooter = call.response.displayFooter;
         outputFile = call.response.outputFile;
         break;
       case CoreToolCallStatus.Error:
       case CoreToolCallStatus.Cancelled:
         resultDisplay = call.response.resultDisplay;
+        displayFooter = call.response.displayFooter;
         break;
       case CoreToolCallStatus.AwaitingApproval:
         correlationId = call.correlationId;
@@ -113,6 +117,7 @@ export function mapToDisplay(
       isClientInitiated: !!call.request.isClientInitiated,
       kind: call.tool?.kind,
       resultDisplay,
+      displayFooter,
       confirmationDetails,
       outputFile,
       ptyId,
