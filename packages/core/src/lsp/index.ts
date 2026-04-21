@@ -12,8 +12,14 @@ export {
   formatDiagnostics,
   appendLspDiagnostics,
   formatSymbolSummary,
+  buildLspFooter,
+  enrichToolResultWithLsp,
+  enrichReadWithLsp,
 } from './enrichment.js';
-export type { CollectedDiagnostics } from './enrichment.js';
+export type {
+  CollectedDiagnostics,
+  LspEnrichmentResult,
+} from './enrichment.js';
 export type {
   LspSettings,
   LspServerUserConfig,

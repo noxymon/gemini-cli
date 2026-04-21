@@ -4,10 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { Diagnostic, DocumentSymbol, SymbolInformation } from './types.js';
 import { DiagnosticSeverity, SymbolKind } from './types.js';
 import type { LspManager } from './manager.js';
+import type { Config } from '../config/config.js';
+import type { DisplayFooter } from '../agent/types.js';
 
 const MAX_DIAGNOSTICS = 20;
 const MAX_SYMBOLS = 50;
@@ -121,6 +124,156 @@ export function appendLspDiagnostics(
 ): string {
   if (!lspOutput) return llmContent;
   return `${llmContent}${lspOutput}`;
+}
+
+/**
+ * Build the user-facing status footer for an LSP diagnostic run.
+ *
+ * Severity mapping:
+ *   errors present            -> 'error'   (red)
+ *   warnings present, no errs -> 'warning' (yellow)
+ *   no diagnostics, timed out -> 'warning' (yellow, "timed out" text)
+ *   no diagnostics, clean     -> 'success' (dim green, "no issues found")
+ */
+export function buildLspFooter(
+  diagnostics: Diagnostic[],
+  timedOut: boolean,
+): DisplayFooter {
+  if (timedOut && diagnostics.length === 0) {
+    return {
+      text: 'LSP: timed out waiting for diagnostics (server may still be starting)',
+      severity: 'warning',
+    };
+  }
+
+  const errors = diagnostics.filter(
+    (d) =>
+      (d.severity ?? DiagnosticSeverity.Error) === DiagnosticSeverity.Error,
+  ).length;
+  const warnings = diagnostics.filter(
+    (d) => d.severity === DiagnosticSeverity.Warning,
+  ).length;
+  const infos = diagnostics.filter(
+    (d) =>
+      d.severity === DiagnosticSeverity.Information ||
+      d.severity === DiagnosticSeverity.Hint,
+  ).length;
+
+  const parts: string[] = [];
+  if (errors > 0) parts.push(`${errors} error${errors !== 1 ? 's' : ''}`);
+  if (warnings > 0)
+    parts.push(`${warnings} warning${warnings !== 1 ? 's' : ''}`);
+  if (infos > 0) parts.push(`${infos} info`);
+
+  if (parts.length === 0) {
+    return { text: 'LSP: no issues found', severity: 'success' };
+  }
+
+  return {
+    text: `LSP: ${parts.join(', ')}`,
+    severity: errors > 0 ? 'error' : 'warning',
+  };
+}
+
+/** Result of enriching a tool output with LSP data. */
+export interface LspEnrichmentResult {
+  /** The tool's llmContent with XML-tagged LSP sections appended (if any). */
+  enrichedLlmContent: string;
+  /** Footer to attach to ToolResult.displayFooter (undefined = no footer). */
+  displayFooter?: DisplayFooter;
+}
+
+/**
+ * Enrich a write/edit tool result with LSP diagnostics.
+ *
+ * Appends `<lsp_diagnostics>` blocks to llmContent for the model and returns a
+ * status footer for the user. No-ops silently (returning the original
+ * llmContent and no footer) when LSP is disabled, no server covers the file,
+ * or the LSP call throws. LSP is supplementary — tool calls never fail
+ * because of it.
+ */
+export async function enrichToolResultWithLsp(
+  config: Config,
+  filePath: string,
+  fileContent: string,
+  llmContent: string,
+  signal?: AbortSignal,
+): Promise<LspEnrichmentResult> {
+  if (!config.isLspEnabled?.()) return { enrichedLlmContent: llmContent };
+
+  try {
+    const lspMgr = await config.getLspManager();
+    if (!lspMgr) return { enrichedLlmContent: llmContent };
+
+    const collected = await collectDiagnosticsForOutput(
+      lspMgr,
+      filePath,
+      fileContent,
+      signal,
+    );
+
+    if (!collected.applicable) return { enrichedLlmContent: llmContent };
+
+    return {
+      enrichedLlmContent: appendLspDiagnostics(llmContent, collected.llmOutput),
+      displayFooter: buildLspFooter(collected.diagnostics, collected.timedOut),
+    };
+  } catch {
+    return { enrichedLlmContent: llmContent };
+  }
+}
+
+/**
+ * Enrich a read_file tool result with LSP data: document symbols and
+ * pre-existing diagnostics.
+ *
+ * Always sends the full on-disk file content to the LSP server, never the
+ * possibly-truncated snippet a caller might pass — sending a snippet would
+ * make the server believe the snippet is the whole file, producing wrong
+ * diagnostics and broken symbol coordinates.
+ */
+export async function enrichReadWithLsp(
+  config: Config,
+  filePath: string,
+  llmContent: string,
+  signal?: AbortSignal,
+): Promise<LspEnrichmentResult> {
+  if (!config.isLspEnabled?.()) return { enrichedLlmContent: llmContent };
+
+  try {
+    const lspMgr = await config.getLspManager();
+    if (!lspMgr || !lspMgr.hasServerFor(filePath)) {
+      return { enrichedLlmContent: llmContent };
+    }
+
+    const fullContent = await fs.readFile(filePath, 'utf-8');
+    const diagResult = await lspMgr.getDiagnostics(
+      filePath,
+      fullContent,
+      signal,
+    );
+
+    let enriched = llmContent;
+
+    const symbols = await lspMgr.getDocumentSymbols(filePath);
+    if (symbols.length > 0) {
+      enriched += formatSymbolSummary(symbols, filePath);
+    }
+
+    if (diagResult.diagnostics.length > 0) {
+      enriched += formatDiagnostics(diagResult.diagnostics, filePath);
+    }
+
+    return {
+      enrichedLlmContent: enriched,
+      displayFooter: buildLspFooter(
+        diagResult.diagnostics,
+        diagResult.timedOut,
+      ),
+    };
+  } catch {
+    return { enrichedLlmContent: llmContent };
+  }
 }
 
 // -----------------------------------------------------------------------
