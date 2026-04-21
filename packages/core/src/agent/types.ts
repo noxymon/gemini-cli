@@ -175,12 +175,33 @@ export interface AgentMessage {
   content: ContentPart[];
 }
 
-export type DisplayText = { type: 'text'; text: string };
+/**
+ * A short status line displayed beneath tool output. Typically used by
+ * enrichment layers (e.g. LSP diagnostics) to surface a summary that the
+ * model's free-text output can't convey directly.
+ *
+ * Severity values:
+ *   error   - red      (problems found)
+ *   warning - yellow   (partial result, unknown state, non-fatal issue)
+ *   success - dim green (check passed, no problems found)
+ *   info    - dim gray  (neutral informational summary)
+ */
+export type DisplayFooter = {
+  text: string;
+  severity: 'error' | 'warning' | 'success' | 'info';
+};
+
+export type DisplayText = {
+  type: 'text';
+  text: string;
+  footer?: DisplayFooter;
+};
 export type DisplayDiff = {
   type: 'diff';
   path?: string;
   beforeText: string;
   afterText: string;
+  footer?: DisplayFooter;
 };
 export type DisplayContent = DisplayText | DisplayDiff;
 

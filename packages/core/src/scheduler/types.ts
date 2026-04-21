@@ -13,6 +13,7 @@ import type {
   ToolResultDisplay,
   ToolLiveOutput,
 } from '../tools/tools.js';
+import type { DisplayFooter } from '../agent/types.js';
 import type { ToolErrorType } from '../tools/tool-error.js';
 import type { SerializableConfirmationDetails } from '../confirmation-bus/types.js';
 import { type ApprovalMode } from '../policy/types.js';
@@ -65,6 +66,11 @@ export interface ToolCallResponseInfo {
    * Optional data payload for passing structured information back to the caller.
    */
   data?: Record<string, unknown>;
+  /**
+   * Optional status line attached to the tool's display output.
+   * Propagated from ToolResult.displayFooter.
+   */
+  displayFooter?: DisplayFooter;
 }
 
 /** Request to execute another tool immediately after a completed one. */

@@ -10,7 +10,12 @@ import type {
   ToolResult,
   ToolResultDisplay,
 } from '../tools/tools.js';
-import type { ToolDisplay, DisplayContent, DisplayDiff } from './types.js';
+import type {
+  ToolDisplay,
+  DisplayContent,
+  DisplayDiff,
+  DisplayFooter,
+} from './types.js';
 
 /**
  * Populates a ToolDisplay object from a tool invocation and its result.
@@ -21,11 +26,13 @@ export function populateToolDisplay({
   invocation,
   resultDisplay,
   displayName,
+  displayFooter,
 }: {
   name: string;
   invocation?: ToolInvocation<object, ToolResult>;
   resultDisplay?: ToolResultDisplay;
   displayName?: string;
+  displayFooter?: DisplayFooter;
 }): ToolDisplay {
   const display: ToolDisplay = {
     name: displayName || name,
@@ -33,7 +40,10 @@ export function populateToolDisplay({
   };
 
   if (resultDisplay) {
-    display.result = toolResultDisplayToDisplayContent(resultDisplay);
+    display.result = toolResultDisplayToDisplayContent(
+      resultDisplay,
+      displayFooter,
+    );
   }
 
   return display;
@@ -41,10 +51,20 @@ export function populateToolDisplay({
 
 /**
  * Converts a legacy ToolResultDisplay into the new DisplayContent format.
+ * When `footer` is provided, it is attached to the resulting DisplayContent.
  */
 export function toolResultDisplayToDisplayContent(
   resultDisplay: ToolResultDisplay,
+  footer?: DisplayFooter,
 ): DisplayContent {
+  const result = toDisplayContent(resultDisplay);
+  if (footer) {
+    return { ...result, footer };
+  }
+  return result;
+}
+
+function toDisplayContent(resultDisplay: ToolResultDisplay): DisplayContent {
   if (typeof resultDisplay === 'string') {
     return { type: 'text', text: resultDisplay };
   }

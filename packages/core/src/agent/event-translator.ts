@@ -247,6 +247,7 @@ export function translateEvent(
         ? {
             result: toolResultDisplayToDisplayContent(
               event.value.resultDisplay,
+              event.value.displayFooter,
             ),
           }
         : undefined;

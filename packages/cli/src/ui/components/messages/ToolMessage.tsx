@@ -45,6 +45,7 @@ export const ToolMessage: React.FC<ToolMessageProps> = ({
   name,
   description,
   resultDisplay,
+  displayFooter,
   status,
   kind,
   availableTerminalHeight,
@@ -131,6 +132,7 @@ export const ToolMessage: React.FC<ToolMessageProps> = ({
         )}
         <ToolResultDisplay
           resultDisplay={resultDisplay}
+          displayFooter={displayFooter}
           availableTerminalHeight={availableTerminalHeight}
           terminalWidth={terminalWidth}
           renderOutputAsMarkdown={renderOutputAsMarkdown}
