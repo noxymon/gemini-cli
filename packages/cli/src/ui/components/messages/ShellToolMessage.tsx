@@ -44,6 +44,7 @@ export const ShellToolMessage: React.FC<ShellToolMessageProps> = ({
   name,
   description,
   resultDisplay,
+  displayFooter,
   status,
   availableTerminalHeight,
   terminalWidth,
@@ -194,6 +195,7 @@ export const ShellToolMessage: React.FC<ShellToolMessageProps> = ({
       >
         <ToolResultDisplay
           resultDisplay={resultDisplay}
+          displayFooter={displayFooter}
           availableTerminalHeight={availableTerminalHeight}
           terminalWidth={terminalWidth}
           renderOutputAsMarkdown={renderOutputAsMarkdown}
