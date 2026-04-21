@@ -236,7 +236,7 @@ export const useAgentStream = ({
               const display = event.display?.result;
               const liveOutput =
                 displayContentToString(display) ?? tc.resultDisplay;
-              const displayFooter = display?.footer ?? tc.displayFooter;
+              const displayFooter = event.display?.footer ?? tc.displayFooter;
               const progressMessage =
                 legacyState?.progressMessage ?? tc.progressMessage;
               const progress = legacyState?.progress ?? tc.progress;
@@ -273,7 +273,7 @@ export const useAgentStream = ({
               const display = event.display?.result;
               const resultDisplay =
                 displayContentToString(display) ?? tc.resultDisplay;
-              const displayFooter = display?.footer ?? tc.displayFooter;
+              const displayFooter = event.display?.footer ?? tc.displayFooter;
 
               return {
                 ...tc,

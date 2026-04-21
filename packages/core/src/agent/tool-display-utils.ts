@@ -43,11 +43,11 @@ export function populateToolDisplay({
   };
 
   if (resultDisplay !== undefined && display.result === undefined) {
-    display.result = toolResultDisplayToDisplayContent(
-      resultDisplay,
-      displayFooter,
-    );
+    display.result = toolResultDisplayToDisplayContent(resultDisplay);
   }
+
+  if (displayFooter) {
+    display.footer = displayFooter;
   }
 
   return display;
@@ -55,20 +55,10 @@ export function populateToolDisplay({
 
 /**
  * Converts a legacy ToolResultDisplay into the new DisplayContent format.
- * When `footer` is provided, it is attached to the resulting DisplayContent.
  */
 export function toolResultDisplayToDisplayContent(
   resultDisplay: ToolResultDisplay,
-  footer?: DisplayFooter,
 ): DisplayContent {
-  const result = toDisplayContent(resultDisplay);
-  if (footer) {
-    return { ...result, footer };
-  }
-  return result;
-}
-
-function toDisplayContent(resultDisplay: ToolResultDisplay): DisplayContent {
   if (typeof resultDisplay === 'string') {
     return { type: 'text', text: resultDisplay };
   }

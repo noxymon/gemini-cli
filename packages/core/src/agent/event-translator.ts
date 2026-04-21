@@ -246,12 +246,19 @@ export function translateEvent(
       const data = buildToolResponseData(event.value);
       const display: ToolDisplay | undefined =
         event.value.display ??
-        (event.value.resultDisplay
+        (event.value.resultDisplay !== undefined ||
+        event.value.displayFooter !== undefined
           ? {
-              result: toolResultDisplayToDisplayContent(
-                event.value.resultDisplay,
-                event.value.displayFooter,
-              ),
+              ...(event.value.resultDisplay !== undefined
+                ? {
+                    result: toolResultDisplayToDisplayContent(
+                      event.value.resultDisplay,
+                    ),
+                  }
+                : {}),
+              ...(event.value.displayFooter
+                ? { footer: event.value.displayFooter }
+                : {}),
             }
           : undefined);
       out.push(

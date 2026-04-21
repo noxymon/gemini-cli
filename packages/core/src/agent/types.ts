@@ -192,17 +192,12 @@ export type DisplayFooter = {
   severity: 'error' | 'warning' | 'success' | 'info';
 };
 
-export type DisplayText = {
-  type: 'text';
-  text: string;
-  footer?: DisplayFooter;
-};
+export type DisplayText = { type: 'text'; text: string };
 export type DisplayDiff = {
   type: 'diff';
   path?: string;
   beforeText: string;
   afterText: string;
-  footer?: DisplayFooter;
 };
 export type DisplayTerminal = {
   type: 'terminal';
@@ -246,6 +241,13 @@ export interface ToolDisplay {
   result?: DisplayContent | null;
   /** A tool may specify its preferred display format. */
   format?: ToolDisplayFormat;
+  /**
+   * Optional status line rendered beneath the tool's primary output.
+   * Lives at the top level of ToolDisplay (rather than inside DisplayContent)
+   * so it survives even when a tool has no structured result (e.g. read_file
+   * whose returnDisplay is an empty string).
+   */
+  footer?: DisplayFooter | null;
 }
 
 export interface ToolRequest {
