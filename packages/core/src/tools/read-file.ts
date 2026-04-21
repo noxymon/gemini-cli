@@ -27,6 +27,7 @@ import {
   getSpecificMimeType,
 } from '../utils/fileUtils.js';
 import type { Config } from '../config/config.js';
+import { enrichReadWithLsp } from '../lsp/enrichment.js';
 import { FileOperation } from '../telemetry/metrics.js';
 import { getProgrammingLanguage } from '../telemetry/telemetry-utils.js';
 import { logFileOperation } from '../telemetry/loggers.js';
@@ -105,7 +106,7 @@ class ReadFileToolInvocation extends BaseToolInvocation<
     };
   }
 
-  async execute(_options: ExecuteOptions): Promise<ToolResult> {
+  async execute({ abortSignal }: ExecuteOptions): Promise<ToolResult> {
     const validationError = this.config.validatePathAccess(
       this.resolvedPath,
       'read',
@@ -186,9 +187,25 @@ ${result.llmContent}`;
       }
     }
 
+    // LSP enrichment: append symbol index + diagnostics for the file type
+    // (if a language server is configured). Returns the original content
+    // plus an optional user-facing status footer.
+    let displayFooter;
+    if (typeof llmContent === 'string') {
+      const enriched = await enrichReadWithLsp(
+        this.config,
+        this.resolvedPath,
+        llmContent,
+        abortSignal,
+      );
+      llmContent = enriched.enrichedLlmContent;
+      displayFooter = enriched.displayFooter;
+    }
+
     return {
       llmContent,
       returnDisplay: result.returnDisplay || '',
+      displayFooter,
     };
   }
 }
