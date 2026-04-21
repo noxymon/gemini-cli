@@ -209,7 +209,7 @@ describe('generateContentResponseUtilities', () => {
       }
     });
 
-    it('should handle llmContent with fileData for Gemini 3 model (should be siblings)', () => {
+    it('should handle llmContent with fileData for Gemini 3 model (should be nested)', () => {
       const llmContent: Part = {
         fileData: { mimeType: 'application/pdf', fileUri: 'gs://...' },
       };
@@ -225,9 +225,9 @@ describe('generateContentResponseUtilities', () => {
             name: toolName,
             id: callId,
             response: { output: 'Binary content provided (1 item(s)).' },
+            parts: [llmContent],
           },
         },
-        llmContent,
       ]);
     });
 
@@ -253,15 +253,16 @@ describe('generateContentResponseUtilities', () => {
       ]);
     });
 
-    it('should handle llmContent with fileData for non-Gemini 3 models', () => {
+    it('should handle llmContent with fileData for non-Gemini models (should not return siblings)', () => {
       const llmContent: Part = {
         fileData: { mimeType: 'application/pdf', fileUri: 'gs://...' },
       };
+      // We'll use a dummy model that doesn't start with gemini-2/3
       const result = convertToFunctionResponse(
         toolName,
         callId,
         llmContent,
-        DEFAULT_GEMINI_MODEL,
+        'old-model',
       );
       expect(result).toEqual([
         {
@@ -271,7 +272,6 @@ describe('generateContentResponseUtilities', () => {
             response: { output: 'Binary content provided (1 item(s)).' },
           },
         },
-        llmContent,
       ]);
     });
 
