@@ -72,6 +72,50 @@ describe('tool-display-utils', () => {
         afterText: 'new',
       });
     });
+
+    it('attaches displayFooter onto the DisplayContent result', () => {
+      const display = populateToolDisplay({
+        name: 'test',
+        resultDisplay: 'hello world',
+        displayFooter: { text: 'LSP: 2 errors', severity: 'error' },
+      });
+      expect(display.result).toEqual({
+        type: 'text',
+        text: 'hello world',
+        footer: { text: 'LSP: 2 errors', severity: 'error' },
+      });
+    });
+
+    it('attaches displayFooter onto a FileDiff-translated DisplayDiff', () => {
+      const fileDiff = {
+        fileDiff: '@@ ...',
+        fileName: 'test.ts',
+        filePath: 'src/test.ts',
+        originalContent: 'old',
+        newContent: 'new',
+      } as unknown as ToolResultDisplay;
+      const display = populateToolDisplay({
+        name: 'test',
+        resultDisplay: fileDiff,
+        displayFooter: { text: 'LSP: no issues found', severity: 'success' },
+      });
+      expect(display.result).toEqual({
+        type: 'diff',
+        path: 'src/test.ts',
+        beforeText: 'old',
+        afterText: 'new',
+        footer: { text: 'LSP: no issues found', severity: 'success' },
+      });
+    });
+
+    it('omits footer when displayFooter is undefined', () => {
+      const display = populateToolDisplay({
+        name: 'test',
+        resultDisplay: 'hello',
+      });
+      expect(display.result).toEqual({ type: 'text', text: 'hello' });
+      expect(display.result).not.toHaveProperty('footer');
+    });
   });
 
   describe('renderDisplayDiff', () => {

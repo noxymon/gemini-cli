@@ -225,6 +225,7 @@ export type {
   DisplayText,
   DisplayDiff,
   DisplayContent,
+  DisplayFooter,
 } from './agent/types.js';
 
 // Export specific tool logic

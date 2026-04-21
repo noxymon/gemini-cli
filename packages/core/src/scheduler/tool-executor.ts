@@ -396,6 +396,7 @@ export class ToolExecutor {
       outputFile,
       contentLength: typeof content === 'string' ? content.length : undefined,
       data: toolResult.data,
+      displayFooter: toolResult.displayFooter,
     };
 
     const startTime = 'startTime' in call ? call.startTime : undefined;

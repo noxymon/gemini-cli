@@ -268,6 +268,7 @@ export class LegacyAgentProtocol implements AgentProtocol {
           resultDisplay: response.resultDisplay,
           displayName: 'tool' in tc ? tc.tool?.displayName : undefined,
           display: response.display,
+          displayFooter: response.displayFooter,
         });
         const data = buildToolResponseData(response);
 

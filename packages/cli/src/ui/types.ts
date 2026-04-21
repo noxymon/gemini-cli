@@ -12,6 +12,7 @@ import {
   type SerializableConfirmationDetails,
   type ToolResultDisplay,
   type ToolDisplay,
+  type DisplayFooter,
   type RetrieveUserQuotaResponse,
   type SkillDefinition,
   type AgentDefinition,
@@ -124,6 +125,11 @@ export interface IndividualToolCallDisplay {
   description: string;
   display?: ToolDisplay;
   resultDisplay: ToolResultDisplay | undefined;
+  /**
+   * Optional status line rendered beneath the tool's primary output.
+   * Extracted from `event.display.result.footer` on tool_response/tool_update.
+   */
+  displayFooter?: DisplayFooter;
   status: CoreToolCallStatus;
   // True when the tool was initiated directly by the user (slash/@/shell flows).
   isClientInitiated?: boolean;
