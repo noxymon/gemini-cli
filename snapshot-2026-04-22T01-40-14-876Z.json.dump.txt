@@ -1,0 +1,1153 @@
+{
+  "type": "single",
+  "columns": 280,
+  "rows": 51,
+  "frames": [
+    {
+      "tree": {
+        "id": "root",
+        "children": [
+          {
+            "id": 36,
+            "children": [
+              {
+                "id": 6886,
+                "children": []
+              },
+              {
+                "id": 6894,
+                "children": []
+              },
+              {
+                "id": 7036,
+                "children": []
+              },
+              {
+                "id": 7048,
+                "children": []
+              },
+              {
+                "id": 7086,
+                "children": []
+              },
+              {
+                "id": 7098,
+                "children": []
+              },
+              {
+                "id": 7110,
+                "children": []
+              },
+              {
+                "id": 7114,
+                "children": []
+              },
+              {
+                "id": 7124,
+                "children": []
+              },
+              {
+                "id": 7152,
+                "children": [
+                  {
+                    "id": 7145,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 7180,
+                "children": [
+                  {
+                    "id": 7173,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 7220,
+                "children": [
+                  {
+                    "id": 7201,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 7228,
+                "children": []
+              },
+              {
+                "id": 7240,
+                "children": []
+              },
+              {
+                "id": 7296,
+                "children": []
+              },
+              {
+                "id": 4168,
+                "children": []
+              },
+              {
+                "id": 4509,
+                "children": []
+              },
+              {
+                "id": 4682,
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      "cursorPosition": {
+        "row": 46,
+        "col": 3
+      },
+      "updates": [
+        {
+          "id": "root",
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 0,
+          "width": 280,
+          "height": 51,
+          "isScrollable": false,
+          "lines": {
+            "totalLength": 51,
+            "updates": [
+              {
+                "start": 0,
+                "end": 51,
+                "text": [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  " ⠹ Thinking... (esc to cancel, 8m 28s) Greasin' the cogs of the machine                                                                                                                                        Tip: Enable truncation of large tool outputs to save tokens (/settings)…",
+                  "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────",
+                  " YOLO Ctrl+Y                                                                                                                                                                                                                              6 GEMINI.md files · 9 MCP servers · 28 skills",
+                  "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀",
+                  " *   Type your message or @path/to/file",
+                  "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄",
+                  " workspace (/directory)                                                              branch                                                          sandbox                                                   /model                                                             quota",
+                  " ~\\Documents\\Code\\gemini-cli --debug                                                 release/v0.40.3                                                 no sandbox                                                Auto (Gemini 3)                                                 26% used",
+                  ""
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 36,
+          "stickyHeaders": [
+            {
+              "nodeId": 7293,
+              "lines": [
+                "╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮",
+                "│ ✓  sequentialthinking (sequential-thinking MCP Server) {\"nextThoughtNeeded\":true,\"totalThoughts\":3,\"thought\":\"The user wants to create a symlink to `C:\\\\Users\\\\USER\\\\Documents\\\\Code\\\\cl4ud3-c000000d3` within the current codebase (`C:\\\\Users\\\\USER\\\\Documents\\\\Code\\\\gemin… │",
+                "│                                                                                                                                                                                                                                                                                 │"
+              ],
+              "stuckLines": [
+                "╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮",
+                "│ ✓  sequentialthinking (sequential-thinking MCP Server) {\"nextThoughtNeeded\":true,\"totalThoughts\":3,\"thought\":\"The user wants to create a symlink to `C:\\\\Users\\\\USER\\\\Documents\\\\Code\\\\cl4ud3-c000000d3` within the current codebase (`C:\\\\Users\\\\USER\\\\Documents\\\\Code\\\\gemin… │",
+                "│─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────│"
+              ],
+              "styledOutput": [
+                "╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮",
+                "│ ✓  sequentialthinking (sequential-thinking MCP Server) {\"nextThoughtNeeded\":true,\"totalThoughts\":3,\"thought\":\"The user wants to create a symlink to `C:\\\\Users\\\\USER\\\\Documents\\\\Code\\\\cl4ud3-c000000d3` within the current codebase (`C:\\\\Users\\\\USER\\\\Documents\\\\Code\\\\gemin… │",
+                "│─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────│"
+              ],
+              "x": 0,
+              "y": -2,
+              "naturalRow": 137,
+              "startRow": 137,
+              "endRow": 140,
+              "scrollContainerId": 36,
+              "isStuckOnly": false,
+              "type": "top",
+              "maxStuckY": -2
+            }
+          ],
+          "x": 0,
+          "y": 0,
+          "width": 280,
+          "height": 40,
+          "scrollTop": 146,
+          "scrollLeft": 0,
+          "scrollHeight": 186,
+          "scrollWidth": 280,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": false,
+          "overflowToBackbuffer": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#4d4d4d",
+          "borderTop": 0,
+          "borderBottom": 0,
+          "lines": {
+            "totalLength": 199,
+            "updates": [
+              {
+                "start": 0,
+                "end": 199,
+                "text": [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "  Responding with gemini-3-flash-preview",
+                  "",
+                  "╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮",
+                  "│ ✓  sequentialthinking (sequential-thinking MCP Server) {\"nextThoughtNeeded\":true,\"totalThoughts\":3,\"thought\":\"The user wants to create a symlink to `C:\\\\Users\\\\USER\\\\Documents\\\\Code\\\\cl4ud3-c000000d3` within the current codebase (`C:\\\\Users\\\\USER\\\\Documents\\\\Code\\\\gemin… │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│ ✓  Shell New-Item -Path \"cl4ud3-c000000d3-link\" -ItemType SymbolicLink -Value \"C:\\Users\\USER\\Documents\\Code\\cl4ud3-c000000d3\"                                                                                                                                                   │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯",
+                  "╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮",
+                  "│ ✓  sequentialthinking (sequential-thinking MCP Server) {\"nextThoughtNeeded\":true,\"thoughtNumber\":2,\"thought\":\"The symlink creation failed due to required administrator privileges.\\nAs an alternative, I can create a **Junction** point. Junction points are similar to dire… │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│ ✓  Shell New-Item -Path \"cl4ud3-c000000d3-link\" -ItemType Junction -Value \"C:\\Users\\USER\\Documents\\Code\\cl4ud3-c000000d3\"                                                                                                                                                       │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯",
+                  "",
+                  "",
+                  "ℹ ⚠️  Response truncated due to token limits.",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  ""
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 4168,
+          "stickyHeaders": [],
+          "x": 2,
+          "y": 150,
+          "width": 271,
+          "height": 9,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 9,
+          "scrollWidth": 271,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#4d4d4d",
+          "borderTop": 0,
+          "borderBottom": 0,
+          "lines": {
+            "totalLength": 11,
+            "updates": [
+              {
+                "start": 0,
+                "end": 11,
+                "text": [
+                  "Output: New-Item : Administrator privilege required for this operation.",
+                  "At line:1 char:1",
+                  "+ New-Item -Path \"cl4ud3-c000000d3-link\" -ItemType SymbolicLink -Value  ...",
+                  "+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+                  "    + CategoryInfo          : PermissionDenied: (C:\\Users\\USER\\D...l4ud3-c000000d3:String) [New-Item], UnauthorizedAccessException",
+                  "    + FullyQualifiedErrorId : NewItemSymbolicLinkElevationRequired,Microsoft.PowerShell.Commands.NewItemCommand",
+                  "",
+                  "Exit Code: 1",
+                  "Process Group PGID: 173420",
+                  "",
+                  ""
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 4509,
+          "stickyHeaders": [],
+          "x": 2,
+          "y": 163,
+          "width": 271,
+          "height": 7,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 7,
+          "scrollWidth": 271,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#4d4d4d",
+          "borderTop": 0,
+          "borderBottom": 0,
+          "lines": {
+            "totalLength": 7,
+            "updates": [
+              {
+                "start": 0,
+                "end": 7,
+                "text": [
+                  "{",
+                  "  \"thoughtNumber\": 2,",
+                  "  \"totalThoughts\": 4,",
+                  "  \"nextThoughtNeeded\": true,",
+                  "  \"branches\": [],",
+                  "  \"thoughtHistoryLength\": 4",
+                  "}"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 4682,
+          "stickyHeaders": [],
+          "x": 2,
+          "y": 173,
+          "width": 271,
+          "height": 9,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 9,
+          "scrollWidth": 271,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#4d4d4d",
+          "borderTop": 0,
+          "borderBottom": 0,
+          "lines": {
+            "totalLength": 9,
+            "updates": [
+              {
+                "start": 0,
+                "end": 9,
+                "text": [
+                  "Output:",
+                  "",
+                  "    Directory: C:\\Users\\USER\\Documents\\Code\\gemini-cli",
+                  "",
+                  "",
+                  "Mode                 LastWriteTime         Length Name",
+                  "----                 -------------         ------ ----",
+                  "d----l         4/22/2026   8:31 AM                cl4ud3-c000000d3-link",
+                  "Process Group PGID: 152640"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 6886,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 0,
+          "width": 280,
+          "height": 6,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 6,
+            "updates": [
+              {
+                "start": 0,
+                "end": 6,
+                "text": [
+                  "",
+                  " ▝▜▄     Gemini CLI v0.40.2",
+                  "   ▝▜▄",
+                  "  ▗▟▀    Signed in with Google: avicienna.ulhaq@gmail.com /auth",
+                  " ▝▀      Plan: Gemini Code Assist in Google One AI Pro /upgrade",
+                  ""
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 6894,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 6,
+          "width": 280,
+          "height": 2,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 2,
+            "updates": [
+              {
+                "start": 0,
+                "end": 2,
+                "text": [
+                  "",
+                  "ℹ You have 4 extensions with an update available. Run \"/extensions update chrome-devtools-mcp conductor nanobanana pickle-rick\"."
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7036,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 8,
+          "width": 280,
+          "height": 58,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 58,
+            "updates": [
+              {
+                "start": 0,
+                "end": 58,
+                "text": [
+                  "",
+                  "ℹ SessionStart:compact hook success: Success",
+                  "  SessionStart hook additional context:",
+                  "  <context_window_protection>",
+                  "    <priority_instructions>",
+                  "      Raw tool output floods your context window. You MUST use context-mode MCP tools to keep raw data in the sandbox.",
+                  "    </priority_instructions>",
+                  "    <tool_selection_hierarchy>",
+                  "      1. GATHER: mcp__context-mode__ctx_batch_execute(commands, queries)",
+                  "         - Primary tool for research. Runs all commands, auto-indexes, and searches.",
+                  "         - ONE call replaces many individual steps.",
+                  "         - Each command: {label: \"descriptive section header\", command: \"shell command\"}",
+                  "         - label becomes the FTS5 chunk title — use descriptive labels for better search.",
+                  "      2. FOLLOW-UP: mcp__context-mode__ctx_search(queries: [\"q1\", \"q2\", ...])",
+                  "         - Use for all follow-up questions. ONE call, many queries.",
+                  "      3. PROCESSING: mcp__context-mode__ctx_execute(language, code) | mcp__context-mode__ctx_execute_file(path, language, code)",
+                  "         - Use for API calls, log analysis, and data processing.",
+                  "    </tool_selection_hierarchy>",
+                  "    <forbidden_actions>",
+                  "      - DO NOT use Bash for commands producing >20 lines of output.",
+                  "      - DO NOT use Read for analysis (use execute_file). Read IS correct for files you intend to Edit.",
+                  "      - DO NOT use WebFetch (use mcp__context-mode__ctx_fetch_and_index instead).",
+                  "      - Bash is ONLY for git/mkdir/rm/mv/navigation.",
+                  "      - DO NOT use mcp__context-mode__ctx_execute or mcp__context-mode__ctx_execute_file to create, modify, or overwrite files.",
+                  "        ctx_execute is for data analysis, log processing, and computation only.",
+                  "    </forbidden_actions>",
+                  "    <file_writing_policy>",
+                  "      ALWAYS use the native Write tool to create files and Edit tool to modify files.",
+                  "      NEVER use mcp__context-mode__ctx_execute, mcp__context-mode__ctx_execute_file, or Bash to write file content.",
+                  "      This applies to all file types: code, configs, plans, specs, YAML, JSON, markdown.",
+                  "    </file_writing_policy>",
+                  "    <output_constraints>",
+                  "      <word_limit>Keep your final response under 500 words.</word_limit>",
+                  "      <artifact_policy>",
+                  "        Write artifacts (code, configs, PRDs) to FILES using the native Write tool. NEVER return them as inline text.",
+                  "        Use Edit tool for modifications to existing files.",
+                  "        Return only: file path + 1-line description.",
+                  "      </artifact_policy>",
+                  "      <response_format>",
+                  "        Your response must be a concise summary:",
+                  "        - Actions taken (2-3 bullets)",
+                  "        - File paths created/modified",
+                  "        - Knowledge base source labels (so parent can search)",
+                  "        - Key findings",
+                  "      </response_format>",
+                  "    </output_constraints>",
+                  "    <ctx_commands>",
+                  "      When the user says \"ctx stats\", \"ctx-stats\", \"/ctx-stats\", or asks about context savings:",
+                  "      → Call the stats MCP tool and display the full output verbatim.",
+                  "      When the user says \"ctx doctor\", \"ctx-doctor\", \"/ctx-doctor\", or asks to diagnose context-mode:",
+                  "      → Call the doctor MCP tool, execute the returned shell command, display results as a checklist.",
+                  "      When the user says \"ctx upgrade\", \"ctx-upgrade\", \"/ctx-upgrade\", or asks to update context-mode:",
+                  "      → Call the upgrade MCP tool, execute the returned shell command, display results as a checklist.",
+                  "      When the user says \"ctx purge\", \"ctx-purge\", \"/ctx-purge\", or asks to wipe/reset the knowledge base:",
+                  "      → Call the purge MCP tool with confirm: true. Warn the user this is irreversible.",
+                  "      After /clear or /compact: knowledge base and session stats are preserved. Inform the user: \"context-mode knowledge base preserved. Use ctx purge if you want to start fresh.\"",
+                  "    </ctx_commands>",
+                  "  </context_window_protection>"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7048,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 66,
+          "width": 280,
+          "height": 3,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 3,
+            "updates": [
+              {
+                "start": 0,
+                "end": 3,
+                "text": [
+                  "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀",
+                  " > /agents",
+                  "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7086,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 69,
+          "width": 280,
+          "height": 14,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 14,
+            "updates": [
+              {
+                "start": 0,
+                "end": 14,
+                "text": [
+                  "Local Agents",
+                  "",
+                  "  - Codebase Investigator Agent (codebase_investigator)",
+                  "    The specialized tool for codebase analysis, architectural mapping, and understanding system-wide dependencies. Invoke this tool for tasks like vague requests, bug root-cause analysis, system refactoring, comprehensive feature implementation or to answer questions about the",
+                  "    codebase that require investigation. It returns a structured report with key file paths, symbols, and actionable architectural insights.",
+                  "  - CLI Help Agent (cli_help)",
+                  "    Specialized agent for answering questions about the Gemini CLI application. Invoke this agent for questions regarding CLI features, configuration schemas (e.g., policies), or instructions on how to create custom subagents. It queries internal documentation to provide",
+                  "    accurate usage guidance.",
+                  "  - Generalist Agent (generalist)",
+                  "    A general-purpose AI agent with access to all tools. Highly recommended for tasks that are turn-intensive or involve processing large amounts of data. Use this to keep the main session history lean and efficient. Excellent for: batch refactoring/error fixing across multiple",
+                  "    files, running commands with high-volume output, and speculative investigations.",
+                  "  - Memory Manager (save_memory)",
+                  "    Writes and reads memory, preferences or facts across ALL future sessions. Use this for recurring instructions like coding styles or tool aliases.",
+                  ""
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7098,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 83,
+          "width": 280,
+          "height": 3,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 3,
+            "updates": [
+              {
+                "start": 0,
+                "end": 3,
+                "text": [
+                  "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀",
+                  " > /model",
+                  "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7110,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 86,
+          "width": 280,
+          "height": 3,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 3,
+            "updates": [
+              {
+                "start": 0,
+                "end": 3,
+                "text": [
+                  "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀",
+                  " > use parallel @codebase_investigator to analyze C:\\Users\\USER\\Documents\\Code\\cl4ud3-c000000d3, and seek any improvement can be made to in current codebase",
+                  "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7114,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 89,
+          "width": 280,
+          "height": 1,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 1,
+            "updates": [
+              {
+                "start": 0,
+                "end": 1,
+                "text": [
+                  "  Responding with gemini-3-flash-preview"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7124,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 90,
+          "width": 280,
+          "height": 3,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 3,
+            "updates": [
+              {
+                "start": 0,
+                "end": 3,
+                "text": [
+                  "",
+                  "  Codebase Analysis & Improvement: Analyze the specified codebase for improvements using the codebase_investigator sub-agent.",
+                  ""
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7152,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 93,
+          "width": 280,
+          "height": 10,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 10,
+            "updates": [
+              {
+                "start": 0,
+                "end": 10,
+                "text": [
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│ ✓  sequentialthinking (sequential-thinking MCP Server) {\"totalThoughts\":5,\"thought\":\"The user wants to analyze the codebase at `C:\\\\Users\\\\USER\\\\Documents\\\\Code\\\\cl4ud3-c000000d3` and find improvements.\\nI need to use the `codebase_investigator` sub-agent for this task … │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7145,
+          "stickyHeaders": [],
+          "x": 2,
+          "y": 3,
+          "width": 271,
+          "height": 7,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 7,
+          "scrollWidth": 271,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#4d4d4d",
+          "borderTop": 0,
+          "borderBottom": 0,
+          "lines": {
+            "totalLength": 7,
+            "updates": [
+              {
+                "start": 0,
+                "end": 7,
+                "text": [
+                  "{",
+                  "  \"thoughtNumber\": 1,",
+                  "  \"totalThoughts\": 5,",
+                  "  \"nextThoughtNeeded\": true,",
+                  "  \"branches\": [],",
+                  "  \"thoughtHistoryLength\": 1",
+                  "}"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7180,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 103,
+          "width": 280,
+          "height": 13,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 13,
+            "updates": [
+              {
+                "start": 0,
+                "end": 13,
+                "text": [
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│ ✓  Shell ls C:\\Users\\USER\\Documents\\Code\\cl4ud3-c000000d3                                                                                                                                                                                                                       │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7173,
+          "stickyHeaders": [],
+          "x": 2,
+          "y": 3,
+          "width": 271,
+          "height": 9,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 9,
+          "scrollWidth": 271,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#4d4d4d",
+          "borderTop": 0,
+          "borderBottom": 0,
+          "lines": {
+            "totalLength": 9,
+            "updates": [
+              {
+                "start": 0,
+                "end": 9,
+                "text": [
+                  "Output:",
+                  "",
+                  "    Directory: C:\\Users\\USER\\Documents\\Code\\cl4ud3-c000000d3",
+                  "",
+                  "",
+                  "Mode                 LastWriteTime         Length Name",
+                  "----                 -------------         ------ ----",
+                  "d-----         4/22/2026   4:43 AM                src",
+                  "Process Group PGID: 181052"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7220,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 116,
+          "width": 280,
+          "height": 13,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 13,
+            "updates": [
+              {
+                "start": 0,
+                "end": 13,
+                "text": [
+                  "╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮",
+                  "│ ✓  sequentialthinking (sequential-thinking MCP Server) {\"thoughtNumber\":2,\"revisesThought\":1,\"nextThoughtNeeded\":true,\"thought\":\"The directory exists and contains a `src` folder. I will invoke the `codebase_investigator` sub-agent to analyze `C:\\\\Users\\\\USER\\\\Documents\\… │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "│                                                                                                                                                                                                                                                                                 │",
+                  "╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯",
+                  "  x  ReadFolder  {\"dir_path\":\"C:\\\\Users\\\\USER\\\\Documents\\\\Code\\\\cl4ud3-c000000d3\"}",
+                  "   → Path not in workspace: Attempted path \"C:\\Users\\USER\\Documents\\Code\\cl4ud3-c000000d3\" resolves outside the allowed workspace directories: C:\\Users\\USER\\Documents\\Code\\gemini-cli or the project temp directory: C:\\Users\\USER\\.gemini\\tmp\\gemini-cli"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7201,
+          "stickyHeaders": [],
+          "x": 2,
+          "y": 3,
+          "width": 271,
+          "height": 7,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 7,
+          "scrollWidth": 271,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#4d4d4d",
+          "borderTop": 0,
+          "borderBottom": 0,
+          "lines": {
+            "totalLength": 7,
+            "updates": [
+              {
+                "start": 0,
+                "end": 7,
+                "text": [
+                  "{",
+                  "  \"thoughtNumber\": 2,",
+                  "  \"totalThoughts\": 5,",
+                  "  \"nextThoughtNeeded\": true,",
+                  "  \"branches\": [],",
+                  "  \"thoughtHistoryLength\": 2",
+                  "}"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7228,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 129,
+          "width": 280,
+          "height": 3,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 3,
+            "updates": [
+              {
+                "start": 0,
+                "end": 3,
+                "text": [
+                  "",
+                  "",
+                  "ℹ Request cancelled."
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7240,
+          "stickyHeaders": [],
+          "x": 0,
+          "y": 132,
+          "width": 280,
+          "height": 3,
+          "isScrollable": false,
+          "overflowToBackbuffer": true,
+          "lines": {
+            "totalLength": 3,
+            "updates": [
+              {
+                "start": 0,
+                "end": 3,
+                "text": [
+                  "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀",
+                  " > create symlink to C:\\\\Users\\\\USER\\\\Documents\\\\Code\\\\cl4ud3-c000000d3 in current codebase",
+                  "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": 7296,
+          "stickyHeaders": [],
+          "x": 2,
+          "y": 140,
+          "width": 271,
+          "height": 7,
+          "scrollTop": 0,
+          "scrollLeft": 0,
+          "scrollHeight": 7,
+          "scrollWidth": 271,
+          "isScrollable": true,
+          "isVerticallyScrollable": true,
+          "isHorizontallyScrollable": false,
+          "scrollbarVisible": true,
+          "marginRight": 0,
+          "marginBottom": 0,
+          "scrollbarThumbColor": "#4d4d4d",
+          "borderTop": 0,
+          "borderBottom": 0,
+          "lines": {
+            "totalLength": 7,
+            "updates": [
+              {
+                "start": 0,
+                "end": 7,
+                "text": [
+                  "{",
+                  "  \"thoughtNumber\": 1,",
+                  "  \"totalThoughts\": 3,",
+                  "  \"nextThoughtNeeded\": true,",
+                  "  \"branches\": [],",
+                  "  \"thoughtHistoryLength\": 3",
+                  "}"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
