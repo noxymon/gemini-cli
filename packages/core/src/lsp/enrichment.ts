@@ -129,49 +129,52 @@ export function appendLspDiagnostics(
 /**
  * Build the user-facing status footer for an LSP diagnostic run.
  *
+ * Philosophy: the footer is a one-liner the human glances at. For issues
+ * we surface the FIRST diagnostic (most actionable) plus a "+N more"
+ * suffix; the model still sees the full list in llmContent.
+ *
  * Severity mapping:
  *   errors present            -> 'error'   (red)
  *   warnings present, no errs -> 'warning' (yellow)
  *   no diagnostics, timed out -> 'warning' (yellow, "timed out" text)
- *   no diagnostics, clean     -> 'success' (dim green, "no issues found")
+ *   no diagnostics, clean     -> 'success' (dim green, "clean")
  */
 export function buildLspFooter(
   diagnostics: Diagnostic[],
   timedOut: boolean,
 ): DisplayFooter {
   if (timedOut && diagnostics.length === 0) {
-    return {
-      text: 'LSP: timed out waiting for diagnostics (server may still be starting)',
-      severity: 'warning',
-    };
+    return { text: 'LSP: timed out', severity: 'warning' };
   }
 
-  const errors = diagnostics.filter(
+  if (diagnostics.length === 0) {
+    return { text: 'LSP: clean', severity: 'success' };
+  }
+
+  // Pick the most actionable diagnostic: highest severity (= lowest numeric),
+  // tiebroken by earliest line.
+  const sorted = [...diagnostics].sort((a, b) => {
+    const sevDiff =
+      (a.severity ?? DiagnosticSeverity.Error) -
+      (b.severity ?? DiagnosticSeverity.Error);
+    if (sevDiff !== 0) return sevDiff;
+    return a.range.start.line - b.range.start.line;
+  });
+
+  const first = sorted[0];
+  const firstMessage = first.message.split('\n')[0].trim();
+  const firstLine = first.range.start.line + 1;
+  const remaining = diagnostics.length - 1;
+  const suffix = remaining > 0 ? ` (+${remaining} more)` : '';
+
+  const hasErrors = diagnostics.some(
     (d) =>
       (d.severity ?? DiagnosticSeverity.Error) === DiagnosticSeverity.Error,
-  ).length;
-  const warnings = diagnostics.filter(
-    (d) => d.severity === DiagnosticSeverity.Warning,
-  ).length;
-  const infos = diagnostics.filter(
-    (d) =>
-      d.severity === DiagnosticSeverity.Information ||
-      d.severity === DiagnosticSeverity.Hint,
-  ).length;
-
-  const parts: string[] = [];
-  if (errors > 0) parts.push(`${errors} error${errors !== 1 ? 's' : ''}`);
-  if (warnings > 0)
-    parts.push(`${warnings} warning${warnings !== 1 ? 's' : ''}`);
-  if (infos > 0) parts.push(`${infos} info`);
-
-  if (parts.length === 0) {
-    return { text: 'LSP: no issues found', severity: 'success' };
-  }
+  );
 
   return {
-    text: `LSP: ${parts.join(', ')}`,
-    severity: errors > 0 ? 'error' : 'warning',
+    text: `LSP: ${firstMessage} (line ${firstLine})${suffix}`,
+    severity: hasErrors ? 'error' : 'warning',
   };
 }
 
