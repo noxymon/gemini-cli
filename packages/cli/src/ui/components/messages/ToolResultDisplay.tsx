@@ -101,7 +101,16 @@ export const ToolResultDisplay: React.FC<ToolResultDisplayProps> = ({
 
   const footer = displayFooter ? <FooterLine footer={displayFooter} /> : null;
 
-  if (!resultDisplay) return null;
+  // When there's no body content but we do have a footer, render the footer
+  // alone (inside a column Box so downstream consumers see a predictable
+  // React element).
+  if (!resultDisplay) {
+    return footer ? (
+      <Box width={childWidth} flexDirection="column">
+        {footer}
+      </Box>
+    ) : null;
+  }
 
   // 1. Early return for background tools (Todos)
   if (typeof resultDisplay === 'object' && 'todos' in resultDisplay) {

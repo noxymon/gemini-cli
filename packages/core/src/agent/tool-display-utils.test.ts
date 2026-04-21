@@ -73,20 +73,20 @@ describe('tool-display-utils', () => {
       });
     });
 
-    it('attaches displayFooter onto the DisplayContent result', () => {
+    it('attaches displayFooter at the top level of ToolDisplay', () => {
       const display = populateToolDisplay({
         name: 'test',
         resultDisplay: 'hello world',
         displayFooter: { text: 'LSP: 2 errors', severity: 'error' },
       });
-      expect(display.result).toEqual({
-        type: 'text',
-        text: 'hello world',
-        footer: { text: 'LSP: 2 errors', severity: 'error' },
+      expect(display.result).toEqual({ type: 'text', text: 'hello world' });
+      expect(display.footer).toEqual({
+        text: 'LSP: 2 errors',
+        severity: 'error',
       });
     });
 
-    it('attaches displayFooter onto a FileDiff-translated DisplayDiff', () => {
+    it('attaches displayFooter alongside a FileDiff-translated DisplayDiff', () => {
       const fileDiff = {
         fileDiff: '@@ ...',
         fileName: 'test.ts',
@@ -104,7 +104,24 @@ describe('tool-display-utils', () => {
         path: 'src/test.ts',
         beforeText: 'old',
         afterText: 'new',
-        footer: { text: 'LSP: no issues found', severity: 'success' },
+      });
+      expect(display.footer).toEqual({
+        text: 'LSP: no issues found',
+        severity: 'success',
+      });
+    });
+
+    it('attaches displayFooter even when resultDisplay is absent', () => {
+      // This is the read_file case: the tool returns no structured display,
+      // only a status footer.
+      const display = populateToolDisplay({
+        name: 'test',
+        displayFooter: { text: 'LSP: no issues found', severity: 'success' },
+      });
+      expect(display.result).toBeUndefined();
+      expect(display.footer).toEqual({
+        text: 'LSP: no issues found',
+        severity: 'success',
       });
     });
 
@@ -114,7 +131,7 @@ describe('tool-display-utils', () => {
         resultDisplay: 'hello',
       });
       expect(display.result).toEqual({ type: 'text', text: 'hello' });
-      expect(display.result).not.toHaveProperty('footer');
+      expect(display.footer).toBeUndefined();
     });
   });
 
