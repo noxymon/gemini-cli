@@ -108,6 +108,7 @@ describe('<SessionSummaryDisplay />', () => {
       executable: 'bash',
       argsPrefix: ['-c'],
       shell: 'bash',
+      defaultPager: 'cat',
     });
     isWindowsMock.mockReturnValue(false);
   });
@@ -177,6 +178,7 @@ describe('<SessionSummaryDisplay />', () => {
         executable: 'powershell.exe',
         argsPrefix: ['-NoProfile', '-Command'],
         shell: 'powershell',
+        defaultPager: 'more',
       });
 
       const uuidSessionId = '1234-abcd-5678-efgh';
@@ -196,6 +198,7 @@ describe('<SessionSummaryDisplay />', () => {
         executable: 'powershell.exe',
         argsPrefix: ['-NoProfile', '-Command'],
         shell: 'powershell',
+        defaultPager: 'more',
       });
 
       const maliciousSessionId = "'; rm -rf / #";

@@ -1,0 +1,764 @@
+[2026-04-21T20:23:11.535Z] [DEBUG] Loading ignore patterns from: C:\Users\USER\Documents\Code\gemini-cli\.geminiignore
+[2026-04-21T20:23:11.562Z] [DEBUG] [DEBUG] [MemoryDiscovery] Loading server hierarchical memory for CWD: C:\Users\USER\Documents\Code\gemini-cli (importFormat: tree)
+[2026-04-21T20:23:11.563Z] [DEBUG] [DEBUG] [MemoryDiscovery] Found readable global GEMINI.md: c:/users/user/.gemini/gemini.md
+[2026-04-21T20:23:11.563Z] [DEBUG] [DEBUG] [MemoryDiscovery] Searching for GEMINI.md starting from CWD: c:/users/user/documents/code/gemini-cli
+[2026-04-21T20:23:11.563Z] [DEBUG] [DEBUG] [MemoryDiscovery] Determined project root: c:/users/user/documents/code/gemini-cli
+[2026-04-21T20:23:11.572Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/gemini.md (dev: 2315947808, ino: 4222124651618683)
+[2026-04-21T20:23:11.572Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/documents/code/gemini-cli/gemini.md (dev: 2315947808, ino: 1407374886415692)
+[2026-04-21T20:23:11.572Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/conductor/gemini.md (dev: 2315947808, ino: 1688849862390746)
+[2026-04-21T20:23:11.572Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/nanobanana/gemini.md (dev: 2315947808, ino: 1407374885684711)
+[2026-04-21T20:23:11.573Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/pickle-rick/gemini.md (dev: 2315947808, ino: 4503599627571882)
+[2026-04-21T20:23:11.574Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/documents/code/gemini-cli/gemini.md (Length: 4610)
+[2026-04-21T20:23:11.574Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/pickle-rick/gemini.md (Length: 3592)
+[2026-04-21T20:23:11.574Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/gemini.md (Length: 0)
+[2026-04-21T20:23:11.574Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/conductor/gemini.md (Length: 2174)
+[2026-04-21T20:23:11.574Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/nanobanana/gemini.md (Length: 5265)
+[2026-04-21T20:23:11.712Z] [LOG] Loaded cached credentials.
+[2026-04-21T20:23:11.983Z] [DEBUG] Experiments loaded {
+  experimentIds: [
+    106018686,
+    105979538,
+    105979560,
+    106015337,
+    105979579,
+    105867471,
+    105979522,
+    105995634,
+    106121401,
+    106100625,
+    105640665,
+    104638466,
+    105704191,
+    101868197,
+    104817729,
+    105695344,
+    106064591,
+    104913215,
+    105821930,
+    104922093,
+    103012598,
+    106143956,
+    105898505,
+    105856899,
+    102617194,
+    105098746,
+    106064030,
+    105757908,
+    104892493,
+    105723762,
+    105822884,
+    105785683,
+    105897325,
+    105658067,
+    105885550,
+    105864341,
+    105943702,
+    106106762,
+    106057393,
+    106106760,
+    105620019,
+    106038160,
+    106124361,
+    106115648,
+    106115654,
+    106029321,
+    104739378,
+    105887313,
+    105849474,
+    106045721,
+    106032303,
+    106033846,
+    106113886,
+    106121607,
+    106054542,
+    105979531,
+    105979553,
+    106015328,
+    105867469,
+    105979517,
+    106121399,
+    106100654,
+    105640661,
+    104638459,
+    105704187,
+    101551624,
+    104673683,
+    105695346,
+    106064590,
+    104913210,
+    105821928,
+    104922082,
+    103012592,
+    105885093,
+    102519585,
+    105098743,
+    106064028,
+    104892490,
+    105011762,
+    105822881,
+    105895316,
+    105658064,
+    105885549,
+    105863625,
+    105943694,
+    106057389,
+    105620012,
+    106038153,
+    106124357,
+    106115644,
+    106115650,
+    106029319,
+    105887311,
+    106045719,
+    106032301,
+    106033844,
+    106113877,
+    106121604,
+    106031647,
+    106018685
+  ],
+  flags: [
+    {
+      flagId: '45740196',
+      boolValue: true
+    },
+    {
+      flagId: '45740197',
+      floatValue: 0.7
+    },
+    {
+      flagId: '45740199',
+      stringValue: ''
+    },
+    {
+      flagId: '45740200',
+      stringValue: "We're making changes to Gemini CLI that may impact your workflow.\n" +
+        "What's Changing: We are adding more robust detection of policy-violating use cases and changing how we prioritize traffic.\n" +
+        'How it affects you: This may result in higher capacity-related errors during periods of high traffic.\n' +
+        'Read more: https://goo.gle/geminicli-updates'
+    },
+    {
+      flagId: '45743869',
+      boolValue: true
+    },
+    {
+      flagId: '45750526',
+      boolValue: true
+    },
+    {
+      flagId: '45750527',
+      intValue: '95'
+    },
+    {
+      flagId: '45752213',
+      boolValue: true
+    },
+    {
+      flagId: '45760185',
+      boolValue: true
+    },
+    {
+      flagId: '45761848',
+      boolValue: true
+    },
+    {
+      flagId: '45771641',
+      boolValue: true
+    },
+    {
+      flagId: '45773036',
+      stringValue: ''
+    },
+    {
+      flagId: '45773134',
+      intValue: '300'
+    },
+    {
+      flagId: '45773135',
+      intValue: '600'
+    },
+    {
+      flagId: '45773187',
+      stringValue: ''
+    },
+    {
+      flagId: '45773188',
+      boolValue: false
+    },
+    {
+      flagId: '45773189',
+      intValue: '30'
+    },
+    {
+      flagId: '45773190',
+      intValue: '15'
+    }
+  ]
+}
+[2026-04-21T20:23:12.185Z] [DEBUG] Current heap size 4144.00 MB
+[2026-04-21T20:23:12.248Z] [DEBUG] Loading ignore patterns from: C:\Users\USER\Documents\Code\gemini-cli\.geminiignore
+[2026-04-21T20:23:12.255Z] [DEBUG] [DEBUG] [MemoryDiscovery] Loading server hierarchical memory for CWD: C:\Users\USER\Documents\Code\gemini-cli (importFormat: tree)
+[2026-04-21T20:23:12.255Z] [DEBUG] [DEBUG] [MemoryDiscovery] Found readable global GEMINI.md: c:/users/user/.gemini/gemini.md
+[2026-04-21T20:23:12.256Z] [DEBUG] [DEBUG] [MemoryDiscovery] Searching for GEMINI.md starting from CWD: c:/users/user/documents/code/gemini-cli
+[2026-04-21T20:23:12.256Z] [DEBUG] [DEBUG] [MemoryDiscovery] Determined project root: c:/users/user/documents/code/gemini-cli
+[2026-04-21T20:23:12.263Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/gemini.md (dev: 2315947808, ino: 4222124651618683)
+[2026-04-21T20:23:12.263Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/documents/code/gemini-cli/gemini.md (dev: 2315947808, ino: 1407374886415692)
+[2026-04-21T20:23:12.263Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/conductor/gemini.md (dev: 2315947808, ino: 1688849862390746)
+[2026-04-21T20:23:12.263Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/nanobanana/gemini.md (dev: 2315947808, ino: 1407374885684711)
+[2026-04-21T20:23:12.263Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/pickle-rick/gemini.md (dev: 2315947808, ino: 4503599627571882)
+[2026-04-21T20:23:12.264Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/documents/code/gemini-cli/gemini.md (Length: 4610)
+[2026-04-21T20:23:12.264Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/pickle-rick/gemini.md (Length: 3592)
+[2026-04-21T20:23:12.264Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/gemini.md (Length: 0)
+[2026-04-21T20:23:12.264Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/conductor/gemini.md (Length: 2174)
+[2026-04-21T20:23:12.264Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/nanobanana/gemini.md (Length: 5265)
+[2026-04-21T20:23:12.273Z] [DEBUG] Experiments loaded {
+  experimentIds: [
+    106018686,
+    105979538,
+    105979560,
+    106015337,
+    105979579,
+    105867471,
+    105979522,
+    105995634,
+    106121401,
+    106100625,
+    105640665,
+    104638466,
+    105704191,
+    101868197,
+    104817729,
+    105695344,
+    106064591,
+    104913215,
+    105821930,
+    104922093,
+    103012598,
+    106143956,
+    105898505,
+    105856899,
+    102617194,
+    105098746,
+    106064030,
+    105757908,
+    104892493,
+    105723762,
+    105822884,
+    105785683,
+    105897325,
+    105658067,
+    105885550,
+    105864341,
+    105943702,
+    106106762,
+    106057393,
+    106106760,
+    105620019,
+    106038160,
+    106124361,
+    106115648,
+    106115654,
+    106029321,
+    104739378,
+    105887313,
+    105849474,
+    106045721,
+    106032303,
+    106033846,
+    106113886,
+    106121607,
+    106054542,
+    105979531,
+    105979553,
+    106015328,
+    105867469,
+    105979517,
+    106121399,
+    106100654,
+    105640661,
+    104638459,
+    105704187,
+    101551624,
+    104673683,
+    105695346,
+    106064590,
+    104913210,
+    105821928,
+    104922082,
+    103012592,
+    105885093,
+    102519585,
+    105098743,
+    106064028,
+    104892490,
+    105011762,
+    105822881,
+    105895316,
+    105658064,
+    105885549,
+    105863625,
+    105943694,
+    106057389,
+    105620012,
+    106038153,
+    106124357,
+    106115644,
+    106115650,
+    106029319,
+    105887311,
+    106045719,
+    106032301,
+    106033844,
+    106113877,
+    106121604,
+    106031647,
+    106018685
+  ],
+  flags: [
+    {
+      flagId: '45740196',
+      boolValue: true
+    },
+    {
+      flagId: '45740197',
+      floatValue: 0.7
+    },
+    {
+      flagId: '45740199',
+      stringValue: ''
+    },
+    {
+      flagId: '45740200',
+      stringValue: "We're making changes to Gemini CLI that may impact your workflow.\n" +
+        "What's Changing: We are adding more robust detection of policy-violating use cases and changing how we prioritize traffic.\n" +
+        'How it affects you: This may result in higher capacity-related errors during periods of high traffic.\n' +
+        'Read more: https://goo.gle/geminicli-updates'
+    },
+    {
+      flagId: '45743869',
+      boolValue: true
+    },
+    {
+      flagId: '45750526',
+      boolValue: true
+    },
+    {
+      flagId: '45750527',
+      intValue: '95'
+    },
+    {
+      flagId: '45752213',
+      boolValue: true
+    },
+    {
+      flagId: '45760185',
+      boolValue: true
+    },
+    {
+      flagId: '45761848',
+      boolValue: true
+    },
+    {
+      flagId: '45771641',
+      boolValue: true
+    },
+    {
+      flagId: '45773036',
+      stringValue: ''
+    },
+    {
+      flagId: '45773134',
+      intValue: '300'
+    },
+    {
+      flagId: '45773135',
+      intValue: '600'
+    },
+    {
+      flagId: '45773187',
+      stringValue: ''
+    },
+    {
+      flagId: '45773188',
+      boolValue: false
+    },
+    {
+      flagId: '45773189',
+      intValue: '30'
+    },
+    {
+      flagId: '45773190',
+      intValue: '15'
+    }
+  ]
+}
+[2026-04-21T20:23:13.004Z] [LOG] [AgentRegistry] User policy exists for 'codebase_investigator', skipping dynamic registration.
+[2026-04-21T20:23:13.005Z] [LOG] [AgentRegistry] User policy exists for 'cli_help', skipping dynamic registration.
+[2026-04-21T20:23:13.005Z] [LOG] [AgentRegistry] User policy exists for 'save_memory', skipping dynamic registration.
+[2026-04-21T20:23:13.009Z] [LOG] [AgentRegistry] Loaded with 4 agents.
+[2026-04-21T20:23:13.011Z] [DEBUG] Loading ignore patterns from: C:\Users\USER\Documents\Code\gemini-cli\.geminiignore
+[2026-04-21T20:23:13.012Z] [DEBUG] Loading ignore patterns from: C:\Users\USER\Documents\Code\gemini-cli\.geminiignore
+[2026-04-21T20:23:13.021Z] [LOG] Loading extension: chrome-devtools-mcp
+[2026-04-21T20:23:13.021Z] [LOG] Loading extension: conductor
+[2026-04-21T20:23:13.021Z] [LOG] Loading extension: nanobanana
+[2026-04-21T20:23:13.022Z] [LOG] Loading extension: pickle-rick
+[2026-04-21T20:23:13.022Z] [LOG] Loading extension: Stitch
+[2026-04-21T20:23:13.022Z] [LOG] Scheduling MCP context refresh...
+[2026-04-21T20:23:13.022Z] [LOG] Executing MCP context refresh...
+[2026-04-21T20:23:13.022Z] [LOG] MCP context refresh already in progress, queuing trailing execution.
+[2026-04-21T20:23:13.078Z] [LOG] MCP context refresh already in progress, queuing trailing execution.
+[2026-04-21T20:23:13.078Z] [LOG] MCP context refresh already in progress, queuing trailing execution.
+[2026-04-21T20:23:13.080Z] [LOG] MCP context refresh already in progress, queuing trailing execution.
+[2026-04-21T20:23:13.126Z] [DEBUG] [DEBUG] [MemoryDiscovery] Loading server hierarchical memory for CWD: C:\Users\USER\Documents\Code\gemini-cli (importFormat: tree)
+[2026-04-21T20:23:13.147Z] [DEBUG] [DEBUG] [MemoryDiscovery] Found readable global GEMINI.md: c:/users/user/.gemini/gemini.md
+[2026-04-21T20:23:13.148Z] [DEBUG] [DEBUG] [MemoryDiscovery] Searching for GEMINI.md starting from CWD: c:/users/user/documents/code/gemini-cli
+[2026-04-21T20:23:13.184Z] [DEBUG] [DEBUG] [MemoryDiscovery] Determined project root: c:/users/user/documents/code/gemini-cli
+[2026-04-21T20:23:13.344Z] [LOG] Flushing log events to Clearcut.
+[2026-04-21T20:23:13.358Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/gemini.md (dev: 2315947808, ino: 4222124651618683)
+[2026-04-21T20:23:13.358Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/documents/code/gemini-cli/gemini.md (dev: 2315947808, ino: 1407374886415692)
+[2026-04-21T20:23:13.358Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/conductor/gemini.md (dev: 2315947808, ino: 1688849862390746)
+[2026-04-21T20:23:13.358Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/nanobanana/gemini.md (dev: 2315947808, ino: 1407374885684711)
+[2026-04-21T20:23:13.358Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/pickle-rick/gemini.md (dev: 2315947808, ino: 4503599627571882)
+[2026-04-21T20:23:13.359Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/documents/code/gemini-cli/gemini.md (Length: 4610)
+[2026-04-21T20:23:13.360Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/pickle-rick/gemini.md (Length: 3592)
+[2026-04-21T20:23:13.361Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/gemini.md (Length: 0)
+[2026-04-21T20:23:13.362Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/nanobanana/gemini.md (Length: 5265)
+[2026-04-21T20:23:13.362Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/conductor/gemini.md (Length: 2174)
+[2026-04-21T20:23:13.362Z] [LOG] MCP context refresh complete.
+[2026-04-21T20:23:13.362Z] [LOG] Coalescing burst refresh requests (300ms delay)...
+[2026-04-21T20:23:13.433Z] [WARN] Error flushing log events: HTTP 400: Bad Request
+[2026-04-21T20:23:13.434Z] [DEBUG] ClearcutLogger: Re-queued 1 events for retry (queue size: 1)
+[2026-04-21T20:23:13.665Z] [LOG] Executing MCP context refresh...
+[2026-04-21T20:23:13.665Z] [DEBUG] [DEBUG] [MemoryDiscovery] Loading server hierarchical memory for CWD: C:\Users\USER\Documents\Code\gemini-cli (importFormat: tree)
+[2026-04-21T20:23:13.665Z] [DEBUG] [DEBUG] [MemoryDiscovery] Found readable global GEMINI.md: c:/users/user/.gemini/gemini.md
+[2026-04-21T20:23:13.665Z] [DEBUG] [DEBUG] [MemoryDiscovery] Searching for GEMINI.md starting from CWD: c:/users/user/documents/code/gemini-cli
+[2026-04-21T20:23:13.665Z] [DEBUG] [DEBUG] [MemoryDiscovery] Determined project root: c:/users/user/documents/code/gemini-cli
+[2026-04-21T20:23:13.673Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/gemini.md (dev: 2315947808, ino: 4222124651618683)
+[2026-04-21T20:23:13.673Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/documents/code/gemini-cli/gemini.md (dev: 2315947808, ino: 1407374886415692)
+[2026-04-21T20:23:13.673Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/conductor/gemini.md (dev: 2315947808, ino: 1688849862390746)
+[2026-04-21T20:23:13.673Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/nanobanana/gemini.md (dev: 2315947808, ino: 1407374885684711)
+[2026-04-21T20:23:13.673Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/pickle-rick/gemini.md (dev: 2315947808, ino: 4503599627571882)
+[2026-04-21T20:23:13.673Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/pickle-rick/gemini.md (Length: 3592)
+[2026-04-21T20:23:13.673Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/documents/code/gemini-cli/gemini.md (Length: 4610)
+[2026-04-21T20:23:13.673Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/gemini.md (Length: 0)
+[2026-04-21T20:23:13.674Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/nanobanana/gemini.md (Length: 5265)
+[2026-04-21T20:23:13.674Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/conductor/gemini.md (Length: 2174)
+[2026-04-21T20:23:13.674Z] [LOG] MCP context refresh complete.
+[2026-04-21T20:23:13.947Z] [DEBUG] [DEBUG] [MCP STDERR (context-mode)]:  Context Mode MCP server v1.0.89 running on stdio
+[2026-04-21T20:23:14.178Z] [DEBUG] [DEBUG] [MCP STDERR (context-mode)]:  Detected runtimes:
+  JavaScript: C:\Program Files\nodejs\node.exe (unknown)
+  TypeScript: not available (install bun, tsx, or ts-node)
+  Python:     python3 (unknown)
+  Shell:      C:\Program Files\Git\usr\bin\bash.exe (unknown)
+  Go:         go (unknown)
+  Rust:       rustc (rustc 1.92.0 (ded5c06cf 2025-12-08))
+  PHP:        php (PHP 8.4.2 (cli) (built: Dec 17 2024 17:28:28) (NTS Visual C++ 2022 x64))
+
+  Tip: Install Bun for 3-5x faster JS/TS execution → https://bun.sh
+[2026-04-21T20:23:14.226Z] [DEBUG] [DEBUG] [MCP STDERR (context-mode)]:  Performance tip: Install Bun for 3-5x faster JS/TS execution
+[2026-04-21T20:23:14.226Z] [DEBUG] [DEBUG] [MCP STDERR (context-mode)]:  curl -fsSL https://bun.sh/install | bash
+[2026-04-21T20:23:14.236Z] [LOG] Registering notification handlers for server 'context-mode'. Capabilities: {
+  prompts: { listChanged: false },
+  resources: { listChanged: false },
+  tools: { listChanged: true }
+}
+[2026-04-21T20:23:14.236Z] [LOG] Server 'context-mode' supports tool updates. Listening for changes...
+[2026-04-21T20:23:14.236Z] [LOG] Server 'context-mode' has resources but did not declare 'listChanged' capability. Listening anyway for robustness...
+[2026-04-21T20:23:14.236Z] [LOG] Server 'context-mode' has prompts but did not declare 'listChanged' capability. Listening anyway for robustness...
+[2026-04-21T20:23:15.002Z] [DEBUG] [DEBUG] [MCP STDERR (sequential-thinking)]:  Sequential Thinking MCP Server running on stdio
+[2026-04-21T20:23:15.005Z] [LOG] Registering notification handlers for server 'sequential-thinking'. Capabilities: { tools: { listChanged: true } }
+[2026-04-21T20:23:15.006Z] [LOG] Server 'sequential-thinking' supports tool updates. Listening for changes...
+[2026-04-21T20:23:15.017Z] [LOG] Scheduling MCP context refresh...
+[2026-04-21T20:23:15.017Z] [LOG] Executing MCP context refresh...
+[2026-04-21T20:23:15.017Z] [DEBUG] [DEBUG] [MemoryDiscovery] Loading server hierarchical memory for CWD: C:\Users\USER\Documents\Code\gemini-cli (importFormat: tree)
+[2026-04-21T20:23:15.017Z] [DEBUG] [DEBUG] [MemoryDiscovery] Found readable global GEMINI.md: c:/users/user/.gemini/gemini.md
+[2026-04-21T20:23:15.017Z] [DEBUG] [DEBUG] [MemoryDiscovery] Searching for GEMINI.md starting from CWD: c:/users/user/documents/code/gemini-cli
+[2026-04-21T20:23:15.018Z] [DEBUG] [DEBUG] [MemoryDiscovery] Determined project root: c:/users/user/documents/code/gemini-cli
+[2026-04-21T20:23:15.024Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/gemini.md (dev: 2315947808, ino: 4222124651618683)
+[2026-04-21T20:23:15.025Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/documents/code/gemini-cli/gemini.md (dev: 2315947808, ino: 1407374886415692)
+[2026-04-21T20:23:15.025Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/conductor/gemini.md (dev: 2315947808, ino: 1688849862390746)
+[2026-04-21T20:23:15.025Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/nanobanana/gemini.md (dev: 2315947808, ino: 1407374885684711)
+[2026-04-21T20:23:15.025Z] [DEBUG] [DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/user/.gemini/extensions/pickle-rick/gemini.md (dev: 2315947808, ino: 4503599627571882)
+[2026-04-21T20:23:15.025Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/documents/code/gemini-cli/gemini.md (Length: 4610)
+[2026-04-21T20:23:15.025Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/pickle-rick/gemini.md (Length: 3592)
+[2026-04-21T20:23:15.025Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/gemini.md (Length: 0)
+[2026-04-21T20:23:15.025Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/conductor/gemini.md (Length: 2174)
+[2026-04-21T20:23:15.025Z] [DEBUG] [DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/user/.gemini/extensions/nanobanana/gemini.md (Length: 5265)
+[2026-04-21T20:23:15.025Z] [LOG] MCP context refresh complete.
+[2026-04-21T20:23:15.032Z] [DEBUG] Hook registry initialized with 8 hook entries
+[2026-04-21T20:23:15.033Z] [DEBUG] Hook system initialized successfully
+[2026-04-21T20:23:15.054Z] [DEBUG] [STARTUP] StartupProfiler.flush() called with 9 phases
+[2026-04-21T20:23:15.054Z] [DEBUG] [STARTUP] Recording metric for phase: cli_startup duration: 1557.1974
+[2026-04-21T20:23:15.054Z] [DEBUG] [STARTUP] Recording metric for phase: load_settings duration: 6.825099999999907
+[2026-04-21T20:23:15.054Z] [DEBUG] [STARTUP] Recording metric for phase: cleanup_ops duration: 131.6617
+[2026-04-21T20:23:15.054Z] [DEBUG] [STARTUP] Recording metric for phase: parse_arguments duration: 8.678499999999985
+[2026-04-21T20:23:15.054Z] [DEBUG] [STARTUP] Recording metric for phase: load_cli_config duration: 83.30909999999994
+[2026-04-21T20:23:15.054Z] [DEBUG] [STARTUP] Recording metric for phase: setup_terminal duration: 0.35989999999992506
+[2026-04-21T20:23:15.054Z] [DEBUG] [STARTUP] Recording metric for phase: initialize_app duration: 650.0793000000001
+[2026-04-21T20:23:15.054Z] [DEBUG] [STARTUP] Recording metric for phase: authenticate duration: 648.0988000000002
+[2026-04-21T20:23:15.054Z] [DEBUG] [STARTUP] Recording metric for phase: discover_tools duration: 15.332699999999932
+[2026-04-21T20:23:15.055Z] [DEBUG] Created execution plan for SessionStart: 1 hook(s) to execute in parallel
+[2026-04-21T20:23:15.057Z] [DEBUG] Expanding hook command: context-mode hook gemini-cli sessionstart (cwd: C:\Users\USER\Documents\Code\gemini-cli)
+[2026-04-21T20:23:15.458Z] [WARN] Hook system message: SessionStart:compact hook success: Success
+SessionStart hook additional context: 
+
+<context_window_protection>
+  <priority_instructions>
+    Raw tool output floods your context window. You MUST use context-mode MCP tools to keep raw data in the sandbox.
+  </priority_instructions>
+
+  <tool_selection_hierarchy>
+    1. GATHER: mcp__context-mode__ctx_batch_execute(commands, queries)
+       - Primary tool for research. Runs all commands, auto-indexes, and searches.
+       - ONE call replaces many individual steps.
+       - Each command: {label: "descriptive section header", command: "shell command"}
+       - label becomes the FTS5 chunk title — use descriptive labels for better search.
+    2. FOLLOW-UP: mcp__context-mode__ctx_search(queries: ["q1", "q2", ...])
+       - Use for all follow-up questions. ONE call, many queries.
+    3. PROCESSING: mcp__context-mode__ctx_execute(language, code) | mcp__context-mode__ctx_execute_file(path, language, code)
+       - Use for API calls, log analysis, and data processing.
+  </tool_selection_hierarchy>
+
+  <forbidden_actions>
+    - DO NOT use Bash for commands producing >20 lines of output.
+    - DO NOT use Read for analysis (use execute_file). Read IS correct for files you intend to Edit.
+    - DO NOT use WebFetch (use mcp__context-mode__ctx_fetch_and_index instead).
+    - Bash is ONLY for git/mkdir/rm/mv/navigation.
+    - DO NOT use mcp__context-mode__ctx_execute or mcp__context-mode__ctx_execute_file to create, modify, or overwrite files.
+      ctx_execute is for data analysis, log processing, and computation only.
+  </forbidden_actions>
+
+  <file_writing_policy>
+    ALWAYS use the native Write tool to create files and Edit tool to modify files.
+    NEVER use mcp__context-mode__ctx_execute, mcp__context-mode__ctx_execute_file, or Bash to write file content.
+    This applies to all file types: code, configs, plans, specs, YAML, JSON, markdown.
+  </file_writing_policy>
+
+  <output_constraints>
+    <word_limit>Keep your final response under 500 words.</word_limit>
+    <artifact_policy>
+      Write artifacts (code, configs, PRDs) to FILES using the native Write tool. NEVER return them as inline text.
+      Use Edit tool for modifications to existing files.
+      Return only: file path + 1-line description.
+    </artifact_policy>
+    <response_format>
+      Your response must be a concise summary:
+      - Actions taken (2-3 bullets)
+      - File paths created/modified
+      - Knowledge base source labels (so parent can search)
+      - Key findings
+    </response_format>
+  </output_constraints>
+
+  <ctx_commands>
+    When the user says "ctx stats", "ctx-stats", "/ctx-stats", or asks about context savings:
+    → Call the stats MCP tool and display the full output verbatim.
+
+    When the user says "ctx doctor", "ctx-doctor", "/ctx-doctor", or asks to diagnose context-mode:
+    → Call the doctor MCP tool, execute the returned shell command, display results as a checklist.
+
+    When the user says "ctx upgrade", "ctx-upgrade", "/ctx-upgrade", or asks to update context-mode:
+    → Call the upgrade MCP tool, execute the returned shell command, display results as a checklist.
+
+    When the user says "ctx purge", "ctx-purge", "/ctx-purge", or asks to wipe/reset the knowledge base:
+    → Call the purge MCP tool with confirm: true. Warn the user this is irreversible.
+
+    After /clear or /compact: knowledge base and session stats are preserved. Inform the user: "context-mode knowledge base preserved. Use `ctx purge` if you want to start fresh."
+  </ctx_commands>
+
+</context_window_protection>
+[2026-04-21T20:23:15.458Z] [DEBUG] Hook execution for SessionStart: 1 hooks executed successfully, total duration: 400ms
+[2026-04-21T20:23:15.461Z] [DEBUG] Experiments loaded {
+  experimentIds: [
+    106018686,
+    105979538,
+    105979560,
+    106015337,
+    105979579,
+    105867471,
+    105979522,
+    105995634,
+    106121401,
+    106100625,
+    105640665,
+    104638466,
+    105704191,
+    101868197,
+    104817729,
+    105695344,
+    106064591,
+    104913215,
+    105821930,
+    104922093,
+    103012598,
+    106143956,
+    105898505,
+    105856899,
+    102617194,
+    105098746,
+    106064030,
+    105757908,
+    104892493,
+    105723762,
+    105822884,
+    105785683,
+    105897325,
+    105658067,
+    105885550,
+    105864341,
+    105943702,
+    106106762,
+    106057393,
+    106106760,
+    105620019,
+    106038160,
+    106124361,
+    106115648,
+    106115654,
+    106029321,
+    104739378,
+    105887313,
+    105849474,
+    106045721,
+    106032303,
+    106033846,
+    106113886,
+    106121607,
+    106054542,
+    105979531,
+    105979553,
+    106015328,
+    105867469,
+    105979517,
+    106121399,
+    106100654,
+    105640661,
+    104638459,
+    105704187,
+    101551624,
+    104673683,
+    105695346,
+    106064590,
+    104913210,
+    105821928,
+    104922082,
+    103012592,
+    105885093,
+    102519585,
+    105098743,
+    106064028,
+    104892490,
+    105011762,
+    105822881,
+    105895316,
+    105658064,
+    105885549,
+    105863625,
+    105943694,
+    106057389,
+    105620012,
+    106038153,
+    106124357,
+    106115644,
+    106115650,
+    106029319,
+    105887311,
+    106045719,
+    106032301,
+    106033844,
+    106113877,
+    106121604,
+    106031647,
+    106018685
+  ],
+  flags: [
+    {
+      flagId: '45740196',
+      boolValue: true
+    },
+    {
+      flagId: '45740197',
+      floatValue: 0.7
+    },
+    {
+      flagId: '45740199',
+      stringValue: ''
+    },
+    {
+      flagId: '45740200',
+      stringValue: "We're making changes to Gemini CLI that may impact your workflow.\n" +
+        "What's Changing: We are adding more robust detection of policy-violating use cases and changing how we prioritize traffic.\n" +
+        'How it affects you: This may result in higher capacity-related errors during periods of high traffic.\n' +
+        'Read more: https://goo.gle/geminicli-updates'
+    },
+    {
+      flagId: '45743869',
+      boolValue: true
+    },
+    {
+      flagId: '45750526',
+      boolValue: true
+    },
+    {
+      flagId: '45750527',
+      intValue: '95'
+    },
+    {
+      flagId: '45752213',
+      boolValue: true
+    },
+    {
+      flagId: '45760185',
+      boolValue: true
+    },
+    {
+      flagId: '45761848',
+      boolValue: true
+    },
+    {
+      flagId: '45771641',
+      boolValue: true
+    },
+    {
+      flagId: '45773036',
+      stringValue: ''
+    },
+    {
+      flagId: '45773134',
+      intValue: '300'
+    },
+    {
+      flagId: '45773135',
+      intValue: '600'
+    },
+    {
+      flagId: '45773187',
+      stringValue: ''
+    },
+    {
+      flagId: '45773188',
+      boolValue: false
+    },
+    {
+      flagId: '45773189',
+      intValue: '30'
+    },
+    {
+      flagId: '45773190',
+      intValue: '15'
+    }
+  ]
+}
+[2026-04-21T20:23:15.788Z] [LOG] Session ID: 728e4387-0c19-4b83-ab92-87f8a857ea4d
+[2026-04-21T20:23:15.804Z] [DEBUG] Created execution plan for BeforeAgent: 2 hook(s) to execute in parallel
+[2026-04-21T20:23:15.804Z] [DEBUG] Expanding hook command: node C:\Users\USER\.gemini\extensions\pickle-rick/extension/hooks/dispatch.js increment-iteration (cwd: C:\Users\USER\Documents\Code\gemini-cli)
+[2026-04-21T20:23:15.806Z] [DEBUG] Expanding hook command: node C:\Users\USER\.gemini\extensions\pickle-rick/extension/hooks/dispatch.js reinforce-persona (cwd: C:\Users\USER\Documents\Code\gemini-cli)
+[2026-04-21T20:23:16.048Z] [DEBUG] Hook execution for BeforeAgent: 2 hooks executed successfully, total duration: 484ms
+[2026-04-21T20:23:16.785Z] [DEBUG] [Routing] Selected model: gemini-3-flash-preview (Source: agent-router/NumericalClassifier (Remote), Latency: 729ms)
+	[Routing] Reasoning: [Score: 10 / Threshold: 95] This is a simple greeting, requiring no complex analysis or action.
+[2026-04-21T20:23:16.791Z] [DEBUG] Created execution plan for BeforeModel: 1 hook(s) to execute in parallel
+[2026-04-21T20:23:16.791Z] [DEBUG] Expanding hook command: node C:\Users\USER\.gemini\extensions\pickle-rick/extension/hooks/dispatch.js check-limit (cwd: C:\Users\USER\Documents\Code\gemini-cli)
+[2026-04-21T20:23:17.026Z] [DEBUG] Hook execution for BeforeModel: 1 hooks executed successfully, total duration: 235ms
+[2026-04-21T20:23:21.838Z] [DEBUG] Created execution plan for AfterAgent: 1 hook(s) to execute in parallel
+[2026-04-21T20:23:21.838Z] [DEBUG] Expanding hook command: node C:\Users\USER\.gemini\extensions\pickle-rick/extension/hooks/dispatch.js stop-hook (cwd: C:\Users\USER\Documents\Code\gemini-cli)
+[2026-04-21T20:23:22.075Z] [DEBUG] Hook execution for AfterAgent: 1 hooks executed successfully, total duration: 236ms
