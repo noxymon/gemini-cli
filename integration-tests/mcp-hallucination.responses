@@ -1,0 +1,1 @@
+{"method":"generateContentStream","response":[{"candidates":[{"content":{"parts":[{"text":"I will use the tool mcp_hyphen-server_test-tool.","thought":true}],"role":"model"},"index":0}]},{"candidates":[{"content":{"parts":[{"functionCall":{"name":"mcp_hyphen_server_test_tool","args":{"input":"test"}}}]},"finishReason":"STOP","index":0}]}]}
