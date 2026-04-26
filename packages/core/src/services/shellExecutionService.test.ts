@@ -19,6 +19,7 @@ import type { Readable } from 'node:stream';
 import { type ChildProcess } from 'node:child_process';
 import {
   ShellExecutionService,
+  MAX_CHILD_PROCESS_BUFFER_SIZE,
   type ShellOutputEvent,
   type ShellExecutionConfig,
 } from './shellExecutionService.js';
@@ -489,6 +490,8 @@ describe('ShellExecutionService', () => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           headlessTerminal: mockHeadlessTerminal as any,
           command: 'some-command',
+          accumulatedOutputChunks: [],
+          lastProcessedLine: 0,
         });
     });
 
@@ -2185,5 +2188,365 @@ describe('ShellExecutionService environment variables', () => {
     await new Promise(process.nextTick);
 
     vi.unstubAllEnvs();
+  });
+});
+
+describe('H2 shellExecutionService buffering optimizations', () => {
+  let onOutputEventMock: Mock<(event: ShellOutputEvent) => void>;
+  let mockChildProcess: EventEmitter & Partial<ChildProcess>;
+  let mockPtyProcessH2: EventEmitter & {
+    pid: number;
+    kill: Mock;
+    onData: Mock;
+    onExit: Mock;
+    write: Mock;
+    resize: Mock;
+    destroy: Mock;
+  };
+
+  const h2Config: ShellExecutionConfig = {
+    sessionId: 'h2-test',
+    terminalWidth: 80,
+    terminalHeight: 24,
+    pager: 'cat',
+    showColor: false,
+    disableDynamicLineTrimming: true,
+    sanitizationConfig: {
+      enableEnvironmentVariableRedaction: false,
+      allowedEnvironmentVariables: [],
+      blockedEnvironmentVariables: [],
+    },
+    sandboxManager: new NoopSandboxManager(),
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    ExecutionLifecycleService.resetForTest();
+    ShellExecutionService.resetForTest();
+    mockIsBinary.mockReturnValue(false);
+    mockPlatform.mockReturnValue('linux');
+    mockResolveExecutable.mockImplementation(async (exe: string) => exe);
+    mockSerializeTerminalToObject.mockReturnValue([]);
+
+    onOutputEventMock = vi.fn();
+
+    mockChildProcess = new EventEmitter() as EventEmitter & Partial<ChildProcess>;
+    mockChildProcess.stdout = new EventEmitter() as Readable;
+    mockChildProcess.stderr = new EventEmitter() as Readable;
+    mockChildProcess.kill = vi.fn();
+    Object.defineProperty(mockChildProcess, 'pid', {
+      value: 55555,
+      configurable: true,
+    });
+    mockCpSpawn.mockReturnValue(mockChildProcess);
+    mockGetPty.mockResolvedValue(null); // Default to child_process for H2 tests
+
+    mockPtyProcessH2 = new EventEmitter() as EventEmitter & {
+      pid: number;
+      kill: Mock;
+      onData: Mock;
+      onExit: Mock;
+      write: Mock;
+      resize: Mock;
+      destroy: Mock;
+    };
+    mockPtyProcessH2.pid = 77777;
+    mockPtyProcessH2.kill = vi.fn();
+    mockPtyProcessH2.onData = vi.fn();
+    mockPtyProcessH2.onExit = vi.fn();
+    mockPtyProcessH2.write = vi.fn();
+    mockPtyProcessH2.resize = vi.fn();
+    mockPtyProcessH2.destroy = vi.fn();
+    mockPtySpawn.mockReturnValue(mockPtyProcessH2);
+  });
+
+  describe('child_process: incremental ANSI stripping', () => {
+    it('should strip ANSI codes per-chunk so state.output is pre-stripped before exit', async () => {
+      const abortController = new AbortController();
+      const handle = await ShellExecutionService.execute(
+        'ls --color=auto',
+        '/test/dir',
+        onOutputEventMock,
+        abortController.signal,
+        false,
+        h2Config,
+      );
+
+      await new Promise((resolve) => process.nextTick(resolve));
+
+      // Emit ANSI-colored data
+      mockChildProcess.stdout?.emit(
+        'data',
+        Buffer.from('[32mgreen[0m text'),
+      );
+      await new Promise((resolve) => process.nextTick(resolve));
+
+      // Check internal state: output should already be stripped before exit
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const activeCP = (ShellExecutionService as any).activeChildProcesses.get(
+        55555,
+      );
+      expect(activeCP?.state.output).toBe('green text');
+
+      // The streaming event should still carry raw ANSI for UI rendering
+      expect(onOutputEventMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'data',
+          chunk: '[32mgreen[0m text',
+        }),
+      );
+
+      mockChildProcess.emit('exit', 0, null);
+      const result = await handle.result;
+
+      // Final result should also be ANSI-free
+      expect(result.output).toBe('green text');
+    });
+
+    it('should strip ANSI from multiple chunks before joining', async () => {
+      const abortController = new AbortController();
+      const handle = await ShellExecutionService.execute(
+        'cat colorfile',
+        '/test/dir',
+        onOutputEventMock,
+        abortController.signal,
+        false,
+        h2Config,
+      );
+
+      await new Promise((resolve) => process.nextTick(resolve));
+
+      mockChildProcess.stdout?.emit(
+        'data',
+        Buffer.from('[31mline1[0m\n'),
+      );
+      mockChildProcess.stdout?.emit(
+        'data',
+        Buffer.from('[32mline2[0m'),
+      );
+      await new Promise((resolve) => process.nextTick(resolve));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const activeCP = (ShellExecutionService as any).activeChildProcesses.get(
+        55555,
+      );
+      expect(activeCP?.state.output).toBe('line1\nline2');
+
+      mockChildProcess.emit('exit', 0, null);
+      const result = await handle.result;
+      expect(result.output).toBe('line1\nline2');
+    });
+
+    it('should correctly truncate using stripped size (MAX_CHILD_PROCESS_BUFFER_SIZE respected)', async () => {
+      const abortController = new AbortController();
+      const handle = await ShellExecutionService.execute(
+        'big-output',
+        '/test/dir',
+        onOutputEventMock,
+        abortController.signal,
+        false,
+        h2Config,
+      );
+
+      await new Promise((resolve) => process.nextTick(resolve));
+
+      // Two chunks that together exceed the buffer: stripped sizes matter
+      const chunk1 = 'a'.repeat(MAX_CHILD_PROCESS_BUFFER_SIZE / 2);
+      const chunk2 = 'b'.repeat(MAX_CHILD_PROCESS_BUFFER_SIZE / 2 + 100);
+      mockChildProcess.stdout?.emit('data', Buffer.from(chunk1));
+      mockChildProcess.stdout?.emit('data', Buffer.from(chunk2));
+      await new Promise((resolve) => process.nextTick(resolve));
+
+      mockChildProcess.emit('exit', 0, null);
+      const result = await handle.result;
+
+      expect(result.output).toContain('[GEMINI_CLI_WARNING: Output truncated');
+      const withoutWarning = result.output
+        .substring(0, result.output.indexOf('[GEMINI_CLI_WARNING'))
+        .trimEnd();
+      expect(withoutWarning.length).toBe(MAX_CHILD_PROCESS_BUFFER_SIZE);
+    }, 30000);
+  });
+
+  describe('PTY: incremental output cache (accumulatedOutputChunks)', () => {
+    beforeEach(() => {
+      mockGetPty.mockResolvedValue({
+        module: { spawn: mockPtySpawn },
+        name: 'mock-pty',
+      });
+    });
+
+    it('should initialize activePtys entry with accumulatedOutputChunks and lastProcessedLine', async () => {
+      const abortController = new AbortController();
+      await ShellExecutionService.execute(
+        'ls -l',
+        '/test/dir',
+        onOutputEventMock,
+        abortController.signal,
+        true,
+        h2Config,
+      );
+
+      await new Promise((resolve) => process.nextTick(resolve));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const activePty = (ShellExecutionService as any).activePtys.get(
+        mockPtyProcessH2.pid,
+      );
+      expect(activePty).toBeDefined();
+      expect(Array.isArray(activePty.accumulatedOutputChunks)).toBe(true);
+      expect(activePty.lastProcessedLine).toBe(0);
+
+      // Clean up
+      mockPtyProcessH2.onExit.mock.calls[0][0]({ exitCode: 0, signal: null });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    it('should use incremental cache in getBackgroundOutput rather than full buffer scan', async () => {
+      const abortController = new AbortController();
+      await ShellExecutionService.execute(
+        'long-cmd',
+        '/test/dir',
+        onOutputEventMock,
+        abortController.signal,
+        true,
+        h2Config,
+      );
+
+      await new Promise((resolve) => process.nextTick(resolve));
+
+      // Send data through PTY
+      const onDataListener = mockPtyProcessH2.onData.mock.calls[0][0];
+      onDataListener('hello from pty\r\n');
+
+      // Wait for headlessTerminal.write to complete
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const activePty = (ShellExecutionService as any).activePtys.get(
+        mockPtyProcessH2.pid,
+      );
+      expect(activePty).toBeDefined();
+
+      // Update the cache (simulating what getBackgroundOutput does)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (ShellExecutionService as any).updateActivePtyOutputCache(activePty);
+
+      // lastProcessedLine should have advanced beyond 0
+      expect(activePty.lastProcessedLine).toBeGreaterThan(0);
+      // accumulatedOutputChunks should have content
+      expect(activePty.accumulatedOutputChunks.length).toBeGreaterThan(0);
+      const joined = activePty.accumulatedOutputChunks.join('\n');
+      expect(joined).toContain('hello from pty');
+
+      // Clean up
+      mockPtyProcessH2.onExit.mock.calls[0][0]({ exitCode: 0, signal: null });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    it('should not re-scan already-processed lines on repeated cache updates', async () => {
+      const abortController = new AbortController();
+      await ShellExecutionService.execute(
+        'multi-line-cmd',
+        '/test/dir',
+        onOutputEventMock,
+        abortController.signal,
+        true,
+        h2Config,
+      );
+
+      await new Promise((resolve) => process.nextTick(resolve));
+
+      const onDataListener = mockPtyProcessH2.onData.mock.calls[0][0];
+      onDataListener('first batch\r\n');
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const activePty = (ShellExecutionService as any).activePtys.get(
+        mockPtyProcessH2.pid,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (ShellExecutionService as any).updateActivePtyOutputCache(activePty);
+      const lineCountAfterFirst = activePty.accumulatedOutputChunks.length;
+      const processedAfterFirst = activePty.lastProcessedLine;
+      expect(processedAfterFirst).toBeGreaterThan(0);
+
+      // Second update with no new data should not change anything
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (ShellExecutionService as any).updateActivePtyOutputCache(activePty);
+      expect(activePty.accumulatedOutputChunks.length).toBe(lineCountAfterFirst);
+      expect(activePty.lastProcessedLine).toBe(processedAfterFirst);
+
+      mockPtyProcessH2.onExit.mock.calls[0][0]({ exitCode: 0, signal: null });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+  });
+
+  describe('PTY: hasStartedOutput prevents empty renders', () => {
+    beforeEach(() => {
+      mockGetPty.mockResolvedValue({
+        module: { spawn: mockPtySpawn },
+        name: 'mock-pty',
+      });
+    });
+
+    it('should not emit data event before any output with disableDynamicLineTrimming: false', async () => {
+      const config = { ...h2Config, disableDynamicLineTrimming: false };
+      const abortController = new AbortController();
+      const handle = await ShellExecutionService.execute(
+        'quiet-cmd',
+        '/test/dir',
+        onOutputEventMock,
+        abortController.signal,
+        true,
+        config,
+      );
+
+      await new Promise((resolve) => process.nextTick(resolve));
+
+      // Exit without sending any data
+      mockPtyProcessH2.onExit.mock.calls[0][0]({ exitCode: 0, signal: null });
+      await handle.result;
+
+      // No data events should have been emitted (only exit)
+      const dataEvents = onOutputEventMock.mock.calls.filter(
+        (call) => call[0].type === 'data',
+      );
+      expect(dataEvents).toHaveLength(0);
+    });
+
+    it('should emit data event after output arrives with disableDynamicLineTrimming: false', async () => {
+      const config = { ...h2Config, disableDynamicLineTrimming: false };
+      mockSerializeTerminalToObject.mockReturnValue([
+        [{ text: 'output line', fg: '', bg: '', bold: false, italic: false, underline: false, dim: false, inverse: false, isUninitialized: false }],
+      ]);
+      const abortController = new AbortController();
+      const handle = await ShellExecutionService.execute(
+        'output-cmd',
+        '/test/dir',
+        onOutputEventMock,
+        abortController.signal,
+        true,
+        config,
+      );
+
+      await new Promise((resolve) => process.nextTick(resolve));
+
+      // Send data through PTY
+      const onDataListener = mockPtyProcessH2.onData.mock.calls[0][0];
+      onDataListener('output line\r\n');
+
+      // Wait for write callback and render timer (68ms default)
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Should have emitted a data event now that hasStartedOutput is true
+      const dataEvents = onOutputEventMock.mock.calls.filter(
+        (call) => call[0].type === 'data',
+      );
+      expect(dataEvents.length).toBeGreaterThan(0);
+
+      mockPtyProcessH2.onExit.mock.calls[0][0]({ exitCode: 0, signal: null });
+      await handle.result;
+    });
   });
 });

@@ -46,7 +46,7 @@ import {
 } from './executionLifecycleService.js';
 const { Terminal } = pkg;
 
-const MAX_CHILD_PROCESS_BUFFER_SIZE = 16 * 1024 * 1024; // 16MB
+export const MAX_CHILD_PROCESS_BUFFER_SIZE = 16 * 1024 * 1024; // 16MB
 
 /**
  * An environment variable that is set for shell executions. This can be used
@@ -120,6 +120,8 @@ interface ActivePty {
   maxSerializedLines?: number;
   command: string;
   sessionId?: string;
+  accumulatedOutputChunks: string[];
+  lastProcessedLine: number;
 }
 
 interface ActiveChildProcess {
@@ -656,9 +658,10 @@ export class ShellExecutionService {
           const decoder = stream === 'stdout' ? stdoutDecoder : stderrDecoder;
           const decodedChunk = decoder.decode(data, { stream: true });
 
+          const strippedChunk = stripAnsi(decodedChunk);
           const { newBuffer, truncated } = this.appendAndTruncate(
             state.output,
-            decodedChunk,
+            strippedChunk,
             MAX_CHILD_PROCESS_BUFFER_SIZE,
           );
           state.output = newBuffer;
@@ -677,7 +680,7 @@ export class ShellExecutionService {
               if (ShellExecutionService.backgroundLogPids.has(child.pid)) {
                 ShellExecutionService.syncBackgroundLog(
                   child.pid,
-                  decodedChunk,
+                  strippedChunk,
                 );
               }
             }
@@ -710,7 +713,7 @@ export class ShellExecutionService {
           combinedOutput += truncationMessage;
         }
 
-        const finalStrippedOutput = stripAnsi(combinedOutput).trim();
+        const finalStrippedOutput = combinedOutput.trim();
         const exitCode = code;
         const exitSignal =
           signal && os.constants.signals
@@ -788,7 +791,7 @@ export class ShellExecutionService {
         if (stdoutDecoder) {
           const remaining = stdoutDecoder.decode();
           if (remaining) {
-            state.output += remaining;
+            state.output += stripAnsi(remaining);
             if (isStreamingRawContent) {
               const event: ShellOutputEvent = {
                 type: 'data',
@@ -804,7 +807,7 @@ export class ShellExecutionService {
         if (stderrDecoder) {
           const remaining = stderrDecoder.decode();
           if (remaining) {
-            state.output += remaining;
+            state.output += stripAnsi(remaining);
             if (isStreamingRawContent) {
               const event: ShellOutputEvent = {
                 type: 'data',
@@ -877,6 +880,43 @@ export class ShellExecutionService {
     this.activePtys.delete(pid);
   }
 
+  private static updateActivePtyOutputCache(entry: ActivePty): void {
+    const terminal = entry.headlessTerminal;
+    const buffer = terminal.buffer.active;
+    const endLine = findLastContentLine(buffer, 0);
+
+    if (endLine === -1 || endLine < entry.lastProcessedLine) {
+      return;
+    }
+
+    for (let i = entry.lastProcessedLine; i <= endLine; i++) {
+      const line = buffer.getLine(i);
+      if (!line) {
+        entry.accumulatedOutputChunks.push('');
+        continue;
+      }
+
+      let trimRight = true;
+      if (i + 1 <= endLine) {
+        const nextLine = buffer.getLine(i + 1);
+        if (nextLine?.isWrapped) {
+          trimRight = false;
+        }
+      }
+
+      const lineContent = line.translateToString(trimRight);
+
+      if (line.isWrapped && entry.accumulatedOutputChunks.length > 0) {
+        entry.accumulatedOutputChunks[entry.accumulatedOutputChunks.length - 1] +=
+          lineContent;
+      } else {
+        entry.accumulatedOutputChunks.push(lineContent);
+      }
+    }
+
+    entry.lastProcessedLine = endLine + 1;
+  }
+
   private static async executeWithPty(
     commandToExecute: string,
     cwd: string,
@@ -940,6 +980,8 @@ export class ShellExecutionService {
         maxSerializedLines: shellExecutionConfig.maxSerializedLines,
         command: shellExecutionConfig.originalCommand ?? commandToExecute,
         sessionId: shellExecutionConfig.sessionId,
+        accumulatedOutputChunks: [],
+        lastProcessedLine: 0,
       });
 
       const result = ExecutionLifecycleService.attachExecution(ptyPid, {
@@ -964,7 +1006,14 @@ export class ShellExecutionService {
             return false;
           }
         },
-        getBackgroundOutput: () => getFullBufferText(headlessTerminal),
+        getBackgroundOutput: () => {
+          const entry = ShellExecutionService.activePtys.get(ptyPid);
+          if (entry) {
+            ShellExecutionService.updateActivePtyOutputCache(entry);
+            return entry.accumulatedOutputChunks.join('\n');
+          }
+          return getFullBufferText(headlessTerminal);
+        },
         getSubscriptionSnapshot: () => {
           const endLine = headlessTerminal.buffer.active.length;
           const startLine = Math.max(
@@ -1013,11 +1062,7 @@ export class ShellExecutionService {
 
         if (!shellExecutionConfig.disableDynamicLineTrimming) {
           if (!hasStartedOutput) {
-            const bufferText = getFullBufferText(headlessTerminal);
-            if (bufferText.trim().length === 0) {
-              return;
-            }
-            hasStartedOutput = true;
+            return;
           }
         }
 
@@ -1156,6 +1201,9 @@ export class ShellExecutionService {
 
                 isWriting = true;
                 headlessTerminal.write(decodedChunk, () => {
+                  if (!hasStartedOutput) {
+                    hasStartedOutput = true;
+                  }
                   render();
                   isWriting = false;
                   resolveChunk();
@@ -1221,10 +1269,17 @@ export class ShellExecutionService {
               startLine,
               endLine,
             );
-            const finalOutput = getFullBufferText(headlessTerminal);
+            const entry = ShellExecutionService.activePtys.get(ptyPid);
+            let finalOutput = '';
+            if (entry) {
+              ShellExecutionService.updateActivePtyOutputCache(entry);
+              finalOutput = entry.accumulatedOutputChunks.join('\n');
+            } else {
+              finalOutput = getFullBufferText(headlessTerminal);
+            }
 
             // Dispose the headless terminal to free scrollback buffers.
-            // This must happen after getFullBufferText() extracts the output.
+            // This must happen after output is extracted above.
             try {
               headlessTerminal.dispose();
             } catch {
