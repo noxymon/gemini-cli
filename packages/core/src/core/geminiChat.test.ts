@@ -181,6 +181,7 @@ describe('GeminiChat', () => {
       },
       getContentGenerator: vi.fn().mockReturnValue(mockContentGenerator),
       getRetryFetchErrors: vi.fn().mockReturnValue(false),
+      getEnableStreamWatchdog: vi.fn().mockReturnValue(true),
       getMaxAttempts: vi.fn().mockReturnValue(10),
       getUserTier: vi.fn().mockReturnValue(undefined),
       isContextManagementEnabled: vi.fn().mockReturnValue(false),
