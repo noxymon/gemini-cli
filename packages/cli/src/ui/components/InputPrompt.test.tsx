@@ -932,6 +932,7 @@ describe('InputPrompt', () => {
     it('should handle image save failure gracefully', async () => {
       vi.mocked(clipboardUtils.clipboardHasImage).mockResolvedValue(true);
       vi.mocked(clipboardUtils.saveClipboardImage).mockResolvedValue(null);
+      mockBuffer.replaceRangeByOffset = vi.fn();
 
       const { stdin, unmount } = await renderWithProviders(
         <TestInputPrompt {...props} />,
@@ -942,6 +943,11 @@ describe('InputPrompt', () => {
       });
       await waitFor(() => {
         expect(clipboardUtils.saveClipboardImage).toHaveBeenCalled();
+        // Placeholder inserted then removed (replaced with empty string) when save fails.
+        const calls = vi.mocked(mockBuffer.replaceRangeByOffset).mock.calls;
+        expect(calls.length).toBeGreaterThanOrEqual(2);
+        const lastCall = calls[calls.length - 1];
+        expect(lastCall[2]).toBe(''); // placeholder removed
       });
       expect(mockBuffer.setText).not.toHaveBeenCalled();
       unmount();
@@ -971,17 +977,28 @@ describe('InputPrompt', () => {
         stdin.write('\x16'); // Ctrl+V
       });
       await waitFor(() => {
-        // Should insert at cursor position with spaces
-        expect(mockBuffer.replaceRangeByOffset).toHaveBeenCalled();
+        // The new implementation makes two calls:
+        // 1. Insert placeholder immediately at the cursor offset.
+        // 2. Replace placeholder with the final image path once save completes.
+        const calls = vi.mocked(mockBuffer.replaceRangeByOffset).mock.calls;
+        expect(calls.length).toBeGreaterThanOrEqual(2);
       });
 
-      // Get the actual call to see what path was used
-      const actualCall = vi.mocked(mockBuffer.replaceRangeByOffset).mock
-        .calls[0];
-      expect(actualCall[0]).toBe(5); // start offset
-      expect(actualCall[1]).toBe(5); // end offset
-      expect(actualCall[2]).toBe(
-        ' @' + path.relative(path.join('test', 'project', 'src'), imagePath),
+      const calls = vi.mocked(mockBuffer.replaceRangeByOffset).mock.calls;
+
+      // First call: placeholder inserted at cursor position with a leading space
+      // (because charBefore is 'o', which is not a space or newline).
+      const placeholderCall = calls[0];
+      expect(placeholderCall[0]).toBe(5); // start offset
+      expect(placeholderCall[1]).toBe(5); // end offset (insert, not replace)
+      expect(placeholderCall[2]).toMatch(/^ @<pasting-image/); // leading space + placeholder
+
+      // Second call: placeholder replaced with the actual image path.
+      const finalCall = calls[calls.length - 1];
+      expect(finalCall[0]).toBe(5); // same start offset
+      // The final path should contain the relative image path.
+      expect(finalCall[2]).toContain(
+        '@' + path.relative(path.join('test', 'project', 'src'), imagePath),
       );
       unmount();
     });
@@ -1060,6 +1077,138 @@ describe('InputPrompt', () => {
       });
       // Should NOT call clipboardy.read()
       expect(clipboardy.read).not.toHaveBeenCalled();
+      unmount();
+    });
+  });
+
+  describe('H12 clipboard paste optimizations', () => {
+    // These tests cover the version-token (superseded paste) and placeholder
+    // (image paste off critical path) behaviours introduced by H12.
+
+    beforeEach(() => {
+      vi.mocked(clipboardUtils.clipboardHasImage).mockResolvedValue(false);
+      vi.mocked(clipboardUtils.saveClipboardImage).mockResolvedValue(null);
+      vi.mocked(clipboardUtils.cleanupOldClipboardImages).mockResolvedValue(
+        undefined,
+      );
+    });
+
+    it('discards a superseded text paste when Ctrl+V is pressed twice rapidly', async () => {
+      // Simulate two Ctrl+V presses in quick succession. The first read is
+      // artificially delayed; the second resolves immediately. Only the second
+      // (most recent) clipboard content should land in the buffer.
+      let resolveFirst!: (value: string) => void;
+      const firstReadPromise = new Promise<string>((resolve) => {
+        resolveFirst = resolve;
+      });
+
+      vi.mocked(clipboardy.read)
+        .mockReturnValueOnce(firstReadPromise) // first Ctrl+V — slow
+        .mockResolvedValueOnce('second paste'); // second Ctrl+V — fast
+
+      mockBuffer.insert = vi.fn();
+
+      const { stdin, unmount } = await renderWithProviders(
+        <TestInputPrompt {...props} />,
+        { uiActions },
+      );
+
+      // First Ctrl+V — in-flight but not yet resolved.
+      await act(async () => {
+        stdin.write('\x16');
+      });
+
+      // Second Ctrl+V — increments the version token, superseding the first.
+      await act(async () => {
+        stdin.write('\x16');
+      });
+
+      // Allow the second paste to complete.
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 0));
+      });
+
+      // Wait for the second paste to land.
+      await waitFor(() => {
+        expect(mockBuffer.insert).toHaveBeenCalledWith(
+          'second paste',
+          expect.objectContaining({ paste: true }),
+        );
+      });
+
+      // Now resolve the first paste (late). Its result should be discarded
+      // because the version token has already advanced.
+      resolveFirst('first paste — should be discarded');
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 0));
+      });
+
+      // insert should only have been called once — for the second paste.
+      expect(mockBuffer.insert).toHaveBeenCalledTimes(1);
+
+      unmount();
+    });
+
+    it('inserts placeholder immediately on image paste and replaces with final path', async () => {
+      vi.mocked(clipboardUtils.clipboardHasImage).mockResolvedValue(true);
+      vi.mocked(clipboardUtils.saveClipboardImage).mockResolvedValue(
+        '/tmp/gemini-images/clipboard-999.png',
+      );
+      mockBuffer.replaceRangeByOffset = vi.fn();
+      vi.mocked(mockBuffer.getOffset).mockReturnValue(0);
+      mockBuffer.text = '';
+
+      const { stdin, unmount } = await renderWithProviders(
+        <TestInputPrompt {...props} />,
+        { uiActions },
+      );
+
+      await act(async () => {
+        stdin.write('\x16'); // Ctrl+V
+      });
+
+      await waitFor(() => {
+        // Two calls: placeholder insert + placeholder replace with final path.
+        const calls = vi.mocked(mockBuffer.replaceRangeByOffset).mock.calls;
+        expect(calls.length).toBeGreaterThanOrEqual(2);
+
+        // First call: placeholder string
+        const placeholderCall = calls[0];
+        expect(placeholderCall[2]).toMatch(/@<pasting-image/);
+
+        // Last call: actual image path
+        const finalCall = calls[calls.length - 1];
+        expect(finalCall[2]).toMatch(/clipboard-999\.png/);
+      });
+
+      unmount();
+    });
+
+    it('removes placeholder when image save returns null', async () => {
+      vi.mocked(clipboardUtils.clipboardHasImage).mockResolvedValue(true);
+      vi.mocked(clipboardUtils.saveClipboardImage).mockResolvedValue(null);
+      mockBuffer.replaceRangeByOffset = vi.fn();
+      vi.mocked(mockBuffer.getOffset).mockReturnValue(0);
+      mockBuffer.text = '';
+
+      const { stdin, unmount } = await renderWithProviders(
+        <TestInputPrompt {...props} />,
+        { uiActions },
+      );
+
+      await act(async () => {
+        stdin.write('\x16'); // Ctrl+V
+      });
+
+      await waitFor(() => {
+        const calls = vi.mocked(mockBuffer.replaceRangeByOffset).mock.calls;
+        // At least two calls: placeholder inserted then removed.
+        expect(calls.length).toBeGreaterThanOrEqual(2);
+        // The last call removes the placeholder by passing an empty string.
+        const lastCall = calls[calls.length - 1];
+        expect(lastCall[2]).toBe('');
+      });
+
       unmount();
     });
   });
