@@ -20,7 +20,8 @@ vi.mock('./GeminiRespondingSpinner.js', () => ({
   }: {
     nonRespondingDisplay?: string;
   }) => {
-    const streamingState = React.useContext(StreamingContext)!;
+    const ctx = React.useContext(StreamingContext)!;
+    const streamingState = ctx?.streamingState;
     if (streamingState === StreamingState.Responding) {
       return <Text>MockRespondingSpinner</Text>;
     } else if (nonRespondingDisplay) {
@@ -180,7 +181,16 @@ describe('<LoadingIndicator />', () => {
       setStateExternally = setConfig;
 
       return (
-        <StreamingContext.Provider value={config.state}>
+        <StreamingContext.Provider value={{
+          streamingState: config.state,
+          pendingHistoryItems: [],
+          thought: null,
+          elapsedTime: config.elapsedTime,
+          currentLoadingPhrase: config.phrase,
+          currentTip: undefined,
+          currentWittyPhrase: undefined,
+          activeHooks: [],
+        }}>
           <LoadingIndicator
             currentLoadingPhrase={config.phrase}
             elapsedTime={config.elapsedTime}
@@ -189,6 +199,7 @@ describe('<LoadingIndicator />', () => {
       );
     };
 
+    useTerminalSizeMock.mockReturnValue({ columns: 120, rows: 24 });
     const { lastFrame, unmount, waitUntilReady } = await renderWithProviders(
       <TestWrapper />,
     );

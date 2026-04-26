@@ -6,12 +6,17 @@
 
 import { useIsScreenReaderEnabled } from 'ink';
 import { useUIState } from './contexts/UIStateContext.js';
-import { StreamingContext } from './contexts/StreamingContext.js';
 import { QuittingDisplay } from './components/QuittingDisplay.js';
 import { ScreenReaderAppLayout } from './layouts/ScreenReaderAppLayout.js';
 import { DefaultAppLayout } from './layouts/DefaultAppLayout.js';
 import { AlternateBufferQuittingDisplay } from './components/AlternateBufferQuittingDisplay.js';
 import { useAlternateBuffer } from './hooks/useAlternateBuffer.js';
+
+// NOTE: StreamingContext.Provider has been moved to AppContainer.tsx so that
+// the volatile streaming slice (pendingHistoryItems, streamingState, thought, …)
+// can be memoized independently of the main UIStateContext value.  This prevents
+// components that subscribe only to StreamingContext from re-rendering every time
+// any other part of UIStateContext changes.
 
 export const App = () => {
   const uiState = useUIState();
@@ -20,19 +25,11 @@ export const App = () => {
 
   if (uiState.quittingMessages) {
     if (isAlternateBuffer) {
-      return (
-        <StreamingContext.Provider value={uiState.streamingState}>
-          <AlternateBufferQuittingDisplay />
-        </StreamingContext.Provider>
-      );
+      return <AlternateBufferQuittingDisplay />;
     } else {
       return <QuittingDisplay />;
     }
   }
 
-  return (
-    <StreamingContext.Provider value={uiState.streamingState}>
-      {isScreenReaderEnabled ? <ScreenReaderAppLayout /> : <DefaultAppLayout />}
-    </StreamingContext.Provider>
-  );
+  return isScreenReaderEnabled ? <ScreenReaderAppLayout /> : <DefaultAppLayout />;
 };

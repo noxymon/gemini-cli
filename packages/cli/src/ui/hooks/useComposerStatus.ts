@@ -6,6 +6,7 @@
 
 import { useMemo } from 'react';
 import { useUIState } from '../contexts/UIStateContext.js';
+import { useStreamingContext } from '../contexts/StreamingContext.js';
 import { useQuotaState } from '../contexts/QuotaContext.js';
 import { useSettings } from '../contexts/SettingsContext.js';
 import { CoreToolCallStatus, ApprovalMode } from '@google/gemini-cli-core';
@@ -16,15 +17,20 @@ import { theme } from '../semantic-colors.js';
 
 /**
  * A hook that encapsulates complex status and action-required logic for the Composer.
+ *
+ * H9: Volatile fields (pendingHistoryItems, streamingState, currentLoadingPhrase,
+ * activeHooks) are read from StreamingContext so this hook only re-renders when
+ * those fields change, not on every stable UIStateContext update.
  */
 export const useComposerStatus = () => {
   const uiState = useUIState();
+  const streaming = useStreamingContext();
   const quotaState = useQuotaState();
   const settings = useSettings();
 
   const hasPendingToolConfirmation = useMemo(
     () =>
-      (uiState.pendingHistoryItems ?? [])
+      (streaming.pendingHistoryItems ?? [])
         .filter(
           (item): item is HistoryItemToolGroup => item.type === 'tool_group',
         )
@@ -33,7 +39,7 @@ export const useComposerStatus = () => {
             (tool) => tool.status === CoreToolCallStatus.AwaitingApproval,
           ),
         ),
-    [uiState.pendingHistoryItems],
+    [streaming.pendingHistoryItems],
   );
 
   const hasPendingActionRequired =
@@ -47,12 +53,12 @@ export const useComposerStatus = () => {
     Boolean(uiState.customDialog);
 
   const isInteractiveShellWaiting = Boolean(
-    uiState.currentLoadingPhrase?.includes(INTERACTIVE_SHELL_WAITING_PHRASE),
+    streaming.currentLoadingPhrase?.includes(INTERACTIVE_SHELL_WAITING_PHRASE),
   );
 
   const showLoadingIndicator =
     (!uiState.embeddedShellFocused || uiState.isBackgroundTaskVisible) &&
-    uiState.streamingState === StreamingState.Responding &&
+    streaming.streamingState === StreamingState.Responding &&
     !hasPendingActionRequired;
 
   const showApprovalModeIndicator = uiState.showApprovalModeIndicator;
@@ -60,7 +66,7 @@ export const useComposerStatus = () => {
   const modeContentObj = useMemo(() => {
     const hideMinimalModeHintWhileBusy =
       !uiState.cleanUiDetailsVisible &&
-      (showLoadingIndicator || uiState.activeHooks.length > 0);
+      (showLoadingIndicator || streaming.activeHooks.length > 0);
 
     if (hideMinimalModeHintWhileBusy) return null;
 
@@ -78,7 +84,7 @@ export const useComposerStatus = () => {
   }, [
     uiState.cleanUiDetailsVisible,
     showLoadingIndicator,
-    uiState.activeHooks.length,
+    streaming.activeHooks.length,
     showApprovalModeIndicator,
   ]);
 

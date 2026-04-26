@@ -47,7 +47,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   spinnerIcon,
   isHookActive = false,
 }) => {
-  const streamingState = useStreamingContext();
+  const { streamingState } = useStreamingContext();
   const { columns: terminalWidth } = useTerminalSize();
   const isNarrow = isNarrowWidth(terminalWidth);
 

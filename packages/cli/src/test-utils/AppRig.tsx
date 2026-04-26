@@ -72,9 +72,9 @@ vi.mock('../ui/contexts/StreamingContext.js', async (importOriginal) => {
       const sessionId = config.getSessionId();
 
       React.useEffect(() => {
-        sessionStateMap.set(sessionId, state);
+        sessionStateMap.set(sessionId, state.streamingState);
         // If we see activity, we are no longer "awaiting" the start of a response
-        if (state !== StreamingState.Idle) {
+        if (state.streamingState !== StreamingState.Idle) {
           const rig = activeRigs.get(sessionId);
           if (rig) {
             rig.awaitingResponse = false;

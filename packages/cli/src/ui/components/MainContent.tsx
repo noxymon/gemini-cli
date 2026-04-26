@@ -7,6 +7,7 @@
 import { Box, Static } from 'ink';
 import { HistoryItemDisplay } from './HistoryItemDisplay.js';
 import { useUIState } from '../contexts/UIStateContext.js';
+import { useStreamingContext } from '../contexts/StreamingContext.js';
 import { useAppContext } from '../contexts/AppContext.js';
 import { AppHeader } from './AppHeader.js';
 
@@ -60,8 +61,10 @@ export const MainContent = () => {
     };
   }, []);
 
+  // H9: pendingHistoryItems is volatile (changes per stream chunk) — read from
+  // StreamingContext so MainContent doesn't re-render on every stable UIState update.
+  const { pendingHistoryItems } = useStreamingContext();
   const {
-    pendingHistoryItems,
     mainAreaWidth,
     staticAreaMaxItemHeight,
     availableTerminalHeight,

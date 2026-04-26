@@ -27,7 +27,16 @@ describe('ShowMoreLines layout and padding', () => {
     mockUseOverflowState.mockReturnValue({
       overflowingIds: new Set(['1']),
     } as NonNullable<ReturnType<typeof useOverflowState>>);
-    mockUseStreamingContext.mockReturnValue(StreamingState.Idle);
+    mockUseStreamingContext.mockReturnValue({
+      streamingState: StreamingState.Idle,
+      pendingHistoryItems: [],
+      thought: null,
+      elapsedTime: 0,
+      currentLoadingPhrase: undefined,
+      currentTip: undefined,
+      currentWittyPhrase: undefined,
+      activeHooks: [],
+    });
   });
 
   afterEach(() => {
