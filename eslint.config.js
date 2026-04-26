@@ -323,7 +323,7 @@ export default tseslint.config(
   },
   {
     files: [
-      './scripts/**/*.js',
+      './scripts/**/*.{js,mjs}',
       'packages/*/scripts/**/*.js',
       'esbuild.config.js',
       'packages/core/scripts/**/*.{js,mjs}',

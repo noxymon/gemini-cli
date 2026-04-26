@@ -87,6 +87,7 @@ const cliConfig = {
   entryPoints: { gemini: 'packages/cli/index.ts' },
   outdir: 'bundle',
   splitting: true,
+  chunkNames: 'chunks/[name]-[hash]',
   define: {
     __filename: '__chunk_filename',
     __dirname: '__chunk_dirname',
@@ -129,9 +130,9 @@ const a2aServerConfig = {
 
 Promise.allSettled([
   esbuild.build(cliConfig).then(({ metafile }) => {
-    if (process.env.DEV === 'true') {
-      writeFileSync('./bundle/esbuild.json', JSON.stringify(metafile, null, 2));
-    }
+    // Always emit the metafile so bundle composition is visible in every build.
+    // Use `npm run bundle:analyze` to get a human-readable breakdown.
+    writeFileSync('./bundle/esbuild.json', JSON.stringify(metafile));
   }),
   esbuild.build(a2aServerConfig),
 ]).then((results) => {
