@@ -122,12 +122,15 @@ interface ActivePty {
   maxSerializedLines?: number;
   command: string;
   sessionId?: string;
+  accumulatedOutputChunks: string[];
+  lastProcessedLine: number;
 }
 
 interface ActiveChildProcess {
   process: ChildProcess;
   state: {
-    output: string;
+    outputChunks: string[];
+    outputLength: number;
     truncated: boolean;
     sniffChunks: Buffer[];
     binaryBytesReceived: number;
@@ -189,16 +192,20 @@ const writeBufferToLogStream = (
   terminal: pkg.Terminal,
   stream: fs.WriteStream,
   startLine = 0,
-): number => {
+): { nextLine: number; bytesWritten: number } => {
   const buffer = terminal.buffer.active;
   const lastContentLine = findLastContentLine(buffer, startLine);
+  let bytesWritten = 0;
 
-  if (lastContentLine === -1 || lastContentLine < startLine) return startLine;
+  if (lastContentLine === -1 || lastContentLine < startLine) {
+    return { nextLine: startLine, bytesWritten: 0 };
+  }
 
   for (let i = startLine; i <= lastContentLine; i++) {
     const line = buffer.getLine(i);
     if (!line) {
       stream.write('\n');
+      bytesWritten += 1;
       continue;
     }
 
@@ -215,11 +222,14 @@ const writeBufferToLogStream = (
 
     if (line.isWrapped) {
       stream.write(stripped);
+      bytesWritten += Buffer.byteLength(stripped);
     } else {
       if (i > startLine) {
         stream.write('\n');
+        bytesWritten += 1;
       }
       stream.write(stripped);
+      bytesWritten += Buffer.byteLength(stripped);
     }
   }
 
@@ -228,10 +238,11 @@ const writeBufferToLogStream = (
     const nextLine = terminal.buffer.active.getLine(lastContentLine + 1);
     if (!nextLine?.isWrapped) {
       stream.write('\n');
+      bytesWritten += 1;
     }
   }
 
-  return lastContentLine + 1;
+  return { nextLine: lastContentLine + 1, bytesWritten };
 };
 
 /**
@@ -259,10 +270,13 @@ export class ShellExecutionService {
   private static windowsBashNotFoundWarned = false;
   private static backgroundLogPids = new Set<number>();
   private static backgroundLogStreams = new Map<number, fs.WriteStream>();
+  private static backgroundLogSizes = new Map<number, number>();
   private static backgroundProcessHistory = new Map<
     string, // sessionId
     Map<number, BackgroundProcessRecord>
   >();
+
+  private static readonly MAX_BACKGROUND_LOG_SIZE = 100 * 1024 * 1024; // 100MB
 
   static getLogDir(): string {
     return path.join(Storage.getGlobalTempDir(), 'background-processes');
@@ -291,12 +305,29 @@ export class ShellExecutionService {
 
   private static syncBackgroundLog(pid: number, content: string): void {
     if (!this.backgroundLogPids.has(pid)) return;
+    this.writeToBackgroundLog(pid, content);
+  }
 
+  private static writeToBackgroundLog(pid: number, content: string): void {
     const stream = this.backgroundLogStreams.get(pid);
-    if (stream && content) {
-      // Strip ANSI escape codes before logging
-      stream.write(stripAnsi(content));
+    if (!stream || !content) return;
+
+    const currentSize = this.backgroundLogSizes.get(pid) ?? 0;
+    if (currentSize > this.MAX_BACKGROUND_LOG_SIZE) return;
+
+    const stripped = stripAnsi(content);
+    const newSize = currentSize + Buffer.byteLength(stripped);
+
+    if (newSize > this.MAX_BACKGROUND_LOG_SIZE) {
+      stream.write(
+        `\n[Log size limit exceeded (${this.MAX_BACKGROUND_LOG_SIZE} bytes). Truncating log...]\n`,
+      );
+      this.backgroundLogSizes.set(pid, newSize);
+      return;
     }
+
+    stream.write(stripped);
+    this.backgroundLogSizes.set(pid, newSize);
   }
 
   private static async cleanupLogStream(pid: number): Promise<void> {
@@ -306,6 +337,7 @@ export class ShellExecutionService {
         stream.end(() => resolve());
       });
       this.backgroundLogStreams.delete(pid);
+      this.backgroundLogSizes.delete(pid);
     }
 
     this.backgroundLogPids.delete(pid);
@@ -357,34 +389,34 @@ export class ShellExecutionService {
     );
   }
 
-  private static appendAndTruncate(
-    currentBuffer: string,
-    chunk: string,
+  private static appendChunkAndTruncate(
+    chunks: string[],
+    currentLength: number,
+    newChunk: string,
     maxSize: number,
-  ): { newBuffer: string; truncated: boolean } {
-    const chunkLength = chunk.length;
-    const currentLength = currentBuffer.length;
-    const newTotalLength = currentLength + chunkLength;
+  ): { newLength: number; truncated: boolean } {
+    chunks.push(newChunk);
+    let newLength = currentLength + newChunk.length;
+    let truncated = false;
 
-    if (newTotalLength <= maxSize) {
-      return { newBuffer: currentBuffer + chunk, truncated: false };
+    while (newLength > maxSize && chunks.length > 0) {
+      const first = chunks[0];
+      if (newLength - first.length >= maxSize) {
+        // Can discard the whole first chunk
+        chunks.shift();
+        newLength -= first.length;
+        truncated = true;
+      } else {
+        // Must truncate the first chunk partially
+        const toRemove = newLength - maxSize;
+        chunks[0] = first.slice(toRemove);
+        newLength -= toRemove;
+        truncated = true;
+        break;
+      }
     }
 
-    // Truncation is needed.
-    if (chunkLength >= maxSize) {
-      // The new chunk is larger than or equal to the max buffer size.
-      // The new buffer will be the tail of the new chunk.
-      return {
-        newBuffer: chunk.substring(chunkLength - maxSize),
-        truncated: true,
-      };
-    }
-
-    // The combined buffer exceeds the max size, but the new chunk is smaller than it.
-    // We need to truncate the current buffer from the beginning to make space.
-    const charsToTrim = newTotalLength - maxSize;
-    const truncatedBuffer = currentBuffer.substring(charsToTrim);
-    return { newBuffer: truncatedBuffer + chunk, truncated: true };
+    return { newLength, truncated };
   }
 
   private static async prepareExecution(
@@ -582,7 +614,8 @@ export class ShellExecutionService {
       });
 
       const state = {
-        output: '',
+        outputChunks: [] as string[],
+        outputLength: 0,
         truncated: false,
         sniffChunks: [] as Buffer[],
         binaryBytesReceived: 0,
@@ -600,8 +633,9 @@ export class ShellExecutionService {
       const lifecycleHandle = child.pid
         ? ExecutionLifecycleService.attachExecution(child.pid, {
             executionMethod: 'child_process',
-            getBackgroundOutput: () => state.output,
-            getSubscriptionSnapshot: () => state.output || undefined,
+            getBackgroundOutput: () => state.outputChunks.join(''),
+            getSubscriptionSnapshot: () =>
+              state.outputChunks.join('') || undefined,
             writeInput: (input) => {
               const stdin = child.stdin as Writable | null;
               if (stdin) {
@@ -691,12 +725,13 @@ export class ShellExecutionService {
           const decoder = stream === 'stdout' ? stdoutDecoder : stderrDecoder;
           const decodedChunk = decoder.decode(data, { stream: true });
 
-          const { newBuffer, truncated } = this.appendAndTruncate(
-            state.output,
+          const { newLength, truncated } = this.appendChunkAndTruncate(
+            state.outputChunks,
+            state.outputLength,
             decodedChunk,
             MAX_CHILD_PROCESS_BUFFER_SIZE,
           );
-          state.output = newBuffer;
+          state.outputLength = newLength;
           if (truncated) {
             state.truncated = true;
           }
@@ -737,7 +772,7 @@ export class ShellExecutionService {
         cleanup();
         cmdCleanup?.();
 
-        let combinedOutput = state.output;
+        let combinedOutput = state.outputChunks.join('');
         if (state.truncated) {
           const truncationMessage = `\n[GEMINI_CLI_WARNING: Output truncated. The buffer is limited to ${
             MAX_CHILD_PROCESS_BUFFER_SIZE / (1024 * 1024)
@@ -823,7 +858,12 @@ export class ShellExecutionService {
         if (stdoutDecoder) {
           const remaining = stdoutDecoder.decode();
           if (remaining) {
-            state.output += remaining;
+            ShellExecutionService.appendChunkAndTruncate(
+              state.outputChunks,
+              state.outputLength,
+              remaining,
+              MAX_CHILD_PROCESS_BUFFER_SIZE,
+            );
             if (isStreamingRawContent) {
               const event: ShellOutputEvent = {
                 type: 'data',
@@ -839,7 +879,12 @@ export class ShellExecutionService {
         if (stderrDecoder) {
           const remaining = stderrDecoder.decode();
           if (remaining) {
-            state.output += remaining;
+            ShellExecutionService.appendChunkAndTruncate(
+              state.outputChunks,
+              state.outputLength,
+              remaining,
+              MAX_CHILD_PROCESS_BUFFER_SIZE,
+            );
             if (isStreamingRawContent) {
               const event: ShellOutputEvent = {
                 type: 'data',
@@ -912,6 +957,47 @@ export class ShellExecutionService {
     this.activePtys.delete(pid);
   }
 
+  private static updateActivePtyOutputCache(entry: ActivePty): void {
+    const terminal = entry.headlessTerminal;
+    const buffer = terminal.buffer.active;
+    const endLine = findLastContentLine(buffer, 0);
+
+    if (endLine === -1 || endLine < entry.lastProcessedLine) {
+      return;
+    }
+
+    // Instead of processing the whole buffer every time,
+    // we only process the lines that have been added since last time.
+    for (let i = entry.lastProcessedLine; i <= endLine; i++) {
+      const line = buffer.getLine(i);
+      if (!line) {
+        entry.accumulatedOutputChunks.push('');
+        continue;
+      }
+
+      let trimRight = true;
+      if (i + 1 <= endLine) {
+        const nextLine = buffer.getLine(i + 1);
+        if (nextLine?.isWrapped) {
+          trimRight = false;
+        }
+      }
+
+      const lineContent = line.translateToString(trimRight);
+
+      // If the previous line was wrapped, append to the last chunk
+      if (line.isWrapped && entry.accumulatedOutputChunks.length > 0) {
+        entry.accumulatedOutputChunks[
+          entry.accumulatedOutputChunks.length - 1
+        ] += lineContent;
+      } else {
+        entry.accumulatedOutputChunks.push(lineContent);
+      }
+    }
+
+    entry.lastProcessedLine = endLine + 1;
+  }
+
   private static async executeWithPty(
     commandToExecute: string,
     cwd: string,
@@ -975,6 +1061,8 @@ export class ShellExecutionService {
         maxSerializedLines: shellExecutionConfig.maxSerializedLines,
         command: shellExecutionConfig.originalCommand ?? commandToExecute,
         sessionId: shellExecutionConfig.sessionId,
+        accumulatedOutputChunks: [],
+        lastProcessedLine: 0,
       });
 
       const result = ExecutionLifecycleService.attachExecution(ptyPid, {
@@ -999,7 +1087,14 @@ export class ShellExecutionService {
             return false;
           }
         },
-        getBackgroundOutput: () => getFullBufferText(headlessTerminal),
+        getBackgroundOutput: () => {
+          const entry = ShellExecutionService.activePtys.get(ptyPid);
+          if (entry) {
+            ShellExecutionService.updateActivePtyOutputCache(entry);
+            return entry.accumulatedOutputChunks.join('\n');
+          }
+          return getFullBufferText(headlessTerminal);
+        },
         getSubscriptionSnapshot: () => {
           const endLine = headlessTerminal.buffer.active.length;
           const startLine = Math.max(
@@ -1256,10 +1351,17 @@ export class ShellExecutionService {
               startLine,
               endLine,
             );
-            const finalOutput = getFullBufferText(headlessTerminal);
+            let finalOutput = '';
+            const entry = ShellExecutionService.activePtys.get(ptyPid);
+            if (entry) {
+              ShellExecutionService.updateActivePtyOutputCache(entry);
+              finalOutput = entry.accumulatedOutputChunks.join('\n');
+            } else {
+              finalOutput = getFullBufferText(headlessTerminal);
+            }
 
             // Dispose the headless terminal to free scrollback buffers.
-            // This must happen after getFullBufferText() extracts the output.
+            // This must happen after we extract the output.
             try {
               headlessTerminal.dispose();
             } catch {
@@ -1457,13 +1559,22 @@ export class ShellExecutionService {
         debugLogger.warn('Background log stream error:', err);
       });
       this.backgroundLogStreams.set(pid, stream);
+      this.backgroundLogSizes.set(pid, 0);
 
       if (activePty) {
-        writeBufferToLogStream(activePty.headlessTerminal, stream, 0);
+        const { bytesWritten } = writeBufferToLogStream(
+          activePty.headlessTerminal,
+          stream,
+          0,
+        );
+        this.backgroundLogSizes.set(pid, bytesWritten);
       } else if (activeChild) {
-        const output = activeChild.state.output;
+        stream.write('DEBUG: In activeChild branch');
+        const output = activeChild.state.outputChunks.join('');
         if (output) {
-          stream.write(stripAnsi(output) + '\n');
+          const stripped = stripAnsi(output) + '\n';
+          stream.write(stripped);
+          this.backgroundLogSizes.set(pid, Buffer.byteLength(stripped));
         }
       }
     } catch (e) {
