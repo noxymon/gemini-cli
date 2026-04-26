@@ -118,9 +118,10 @@ describe('MCP Hyphen Hallucination', () => {
       env: { GEMINI_API_KEY: 'dummy-key' },
     });
 
-    // The model (via fake response) will try to call 'mcp_hyphen_server_test_tool'
-    // We expect the agent to report that the tool was not found or failed.
-    expect(result).toContain('not found');
-    expect(result).toContain('mcp_hyphen_server_test_tool');
+    // The model (via fake response) will call 'mcp_hyphen_server_test_tool'
+    // With upfront normalization (Option B), this should exactly match the
+    // registered tool name and succeed!
+    expect(result).not.toContain('not found');
+    expect(result).toContain('I successfully used the tool!');
   });
 });

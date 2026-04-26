@@ -592,9 +592,10 @@ export function generateValidName(name: string) {
   // Enforce the mcp_ prefix for all generated MCP tool names
   let validToolname = name.startsWith('mcp_') ? name : `mcp_${name}`;
 
-  // Replace invalid characters with underscores to conform to Gemini API:
-  // ^[a-zA-Z_][a-zA-Z0-9_\-.:]{0,63}$
-  validToolname = validToolname.replace(/[^a-zA-Z0-9_\-.:]/g, '_');
+  // Replace invalid characters with underscores to conform to Gemini API.
+  // We also replace hyphens with underscores because LLMs tend to hallucinate
+  // underscores instead of hyphens when invoking tools.
+  validToolname = validToolname.replace(/[^a-zA-Z0-9_.:]/g, '_');
 
   // Ensure it starts with a letter or underscore
   if (/^[^a-zA-Z_]/.test(validToolname)) {
