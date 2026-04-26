@@ -8,8 +8,32 @@
 import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url';
 import * as path from 'node:path';
+import * as fs from 'node:fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Find the node_modules directory containing react by walking up from __dirname.
+ * This handles git worktrees where node_modules may not be at a fixed relative
+ * path (e.g. ../../node_modules) from the package directory.
+ */
+function findReactDir(startDir: string): string {
+  let dir = startDir;
+  while (true) {
+    const candidate = path.join(dir, 'node_modules', 'react');
+    if (fs.existsSync(path.join(candidate, 'package.json'))) {
+      return candidate;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      // Fallback to the conventional relative path
+      return path.resolve(startDir, '../../node_modules/react');
+    }
+    dir = parent;
+  }
+}
+
+const reactDir = findReactDir(__dirname);
 
 export default defineConfig({
   resolve: {
@@ -25,9 +49,20 @@ export default defineConfig({
     outputFile: {
       junit: 'junit.xml',
     },
-    alias: {
-      react: path.resolve(__dirname, '../../node_modules/react'),
-    },
+    alias: [
+      {
+        find: /^react\/jsx-dev-runtime$/,
+        replacement: path.join(reactDir, 'jsx-dev-runtime.js'),
+      },
+      {
+        find: /^react\/jsx-runtime$/,
+        replacement: path.join(reactDir, 'jsx-runtime.js'),
+      },
+      {
+        find: /^react$/,
+        replacement: reactDir,
+      },
+    ],
     setupFiles: ['./test-setup.ts'],
     testTimeout: 60000,
     hookTimeout: 60000,
