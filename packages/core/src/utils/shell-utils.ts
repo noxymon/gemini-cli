@@ -818,14 +818,40 @@ function resolveGitForWindowsBash(): string | undefined {
   return undefined;
 }
 
+function getWslBashPaths(): Set<string> {
+  const stubs = new Set<string>();
+  if (os.platform() !== 'win32') return stubs;
+  const systemRoot = process.env['SystemRoot'] ?? 'C:\\Windows';
+  stubs.add(path.join(systemRoot, 'System32', 'bash.exe').toLowerCase());
+  const localAppData = process.env['LOCALAPPDATA'];
+  if (localAppData) {
+    stubs.add(
+      path
+        .join(localAppData, 'Microsoft', 'WindowsApps', 'bash.exe')
+        .toLowerCase(),
+    );
+  }
+  return stubs;
+}
+
 export async function resolveBashOnPath(): Promise<string | undefined> {
   if (cachedBashPath !== undefined) return cachedBashPath ?? undefined;
 
-  // 1. PATH search.
-  const found = await resolveExecutable('bash');
-  if (found) {
-    cachedBashPath = found;
-    return found;
+  // 1. PATH search, but skip WSL stub paths (System32\bash.exe and
+  //    WindowsApps\bash.exe) which require Hyper-V/WSL2 and are not
+  //    real bash shells.
+  const wslStubs = getWslBashPaths();
+  const pathDirs = (process.env['PATH'] || '').split(path.delimiter);
+  for (const dir of pathDirs) {
+    const candidate = path.join(dir, 'bash.exe');
+    if (wslStubs.has(candidate.toLowerCase())) continue;
+    try {
+      await fs.promises.access(candidate, fs.constants.X_OK);
+      cachedBashPath = candidate;
+      return candidate;
+    } catch {
+      continue;
+    }
   }
 
   // 2. Windows-specific: registry + filesystem probes.
