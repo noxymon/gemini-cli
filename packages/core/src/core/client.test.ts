@@ -3467,6 +3467,7 @@ ${JSON.stringify(
           cumulativeResponse: 'Old',
           activeCalls: 0,
           originalRequest: { text: 'Old' },
+          createdAt: Date.now(),
         });
         client['lastPromptId'] = 'old-id';
 
@@ -3635,6 +3636,114 @@ ${JSON.stringify(
           expect.any(String),
           true,
         );
+      });
+
+      it('should prune TTL-expired idle entries when a new entry is created', async () => {
+        const signal = new AbortController().signal;
+
+        // Plant a stale entry: past TTL, no active calls
+        const expiredTime =
+          Date.now() - (GeminiClient['HOOK_STATE_TTL_MS']) - 1000;
+        client['hookStateMap'].set('stale-id', {
+          hasFiredBeforeAgent: true,
+          cumulativeResponse: 'stale response',
+          activeCalls: 0,
+          originalRequest: { text: 'stale' },
+          createdAt: expiredTime,
+        });
+
+        expect(client['hookStateMap'].has('stale-id')).toBe(true);
+
+        mockTurnRunFn.mockImplementation(async function* (
+          this: MockTurnContext,
+        ) {
+          this.getResponseText.mockReturnValue('Response');
+          yield { type: GeminiEventType.Content, value: 'Response' };
+        });
+
+        await fromAsync(
+          client.sendMessageStream({ text: 'New prompt' }, signal, 'fresh-id'),
+        );
+
+        // Stale entry must be pruned; fresh one is cleaned up after completion
+        expect(client['hookStateMap'].has('stale-id')).toBe(false);
+        expect(client['hookStateMap'].has('fresh-id')).toBe(false);
+      });
+
+      it('should NOT prune entries with active calls even when past TTL', async () => {
+        const signal = new AbortController().signal;
+
+        const expiredTime =
+          Date.now() - (GeminiClient['HOOK_STATE_TTL_MS']) - 1000;
+        client['hookStateMap'].set('active-old-id', {
+          hasFiredBeforeAgent: true,
+          cumulativeResponse: 'in progress',
+          activeCalls: 2,
+          originalRequest: { text: 'active' },
+          createdAt: expiredTime,
+        });
+
+        mockTurnRunFn.mockImplementation(async function* (
+          this: MockTurnContext,
+        ) {
+          this.getResponseText.mockReturnValue('Response');
+          yield { type: GeminiEventType.Content, value: 'Response' };
+        });
+
+        await fromAsync(
+          client.sendMessageStream(
+            { text: 'Another prompt' },
+            signal,
+            'other-id',
+          ),
+        );
+
+        // Entry with active calls must survive pruning
+        expect(client['hookStateMap'].has('active-old-id')).toBe(true);
+
+        // Clean up to avoid polluting other tests
+        client['hookStateMap'].delete('active-old-id');
+      });
+
+      it('should enforce max-size cap by evicting oldest entries on overflow', async () => {
+        const signal = new AbortController().signal;
+        const maxEntries = GeminiClient['MAX_HOOK_STATE_ENTRIES'] as number;
+
+        // Fill the map to the cap with fresh (non-TTL-expired) entries
+        const baseTime = Date.now();
+        for (let i = 0; i < maxEntries; i++) {
+          client['hookStateMap'].set(`cap-id-${i}`, {
+            hasFiredBeforeAgent: true,
+            cumulativeResponse: `response ${i}`,
+            activeCalls: 0,
+            originalRequest: { text: `prompt ${i}` },
+            createdAt: baseTime + i,
+          });
+        }
+
+        expect(client['hookStateMap'].size).toBe(maxEntries);
+
+        mockTurnRunFn.mockImplementation(async function* (
+          this: MockTurnContext,
+        ) {
+          this.getResponseText.mockReturnValue('Response');
+          yield { type: GeminiEventType.Content, value: 'Response' };
+        });
+
+        await fromAsync(
+          client.sendMessageStream(
+            { text: 'Overflow prompt' },
+            signal,
+            'overflow-id',
+          ),
+        );
+
+        // Map must not exceed the cap
+        expect(client['hookStateMap'].size).toBeLessThanOrEqual(maxEntries);
+        // Oldest entry (cap-id-0) must have been evicted
+        expect(client['hookStateMap'].has('cap-id-0')).toBe(false);
+        // overflow-id is cleaned up after stream completion
+        expect(client['hookStateMap'].has('overflow-id')).toBe(false);
       });
 
       it('should call resetChat when AfterAgent hook returns shouldClearContext: true', async () => {
