@@ -154,14 +154,19 @@ export const MainContent = () => {
     [historyItems, lastUserPromptIndex],
   );
 
+  // Extract only the type of the last committed history item (a primitive string
+  // or undefined) so the pendingItems memo does not depend on the entire
+  // uiState.history array.  Text-only streaming appends to a pending item change
+  // uiState.history's reference but never change the last item's *type*, so this
+  // primitive stays stable during streaming and avoids unnecessary rebuilds.
+  const lastCommittedItemType = uiState.history.at(-1)?.type;
+
   const pendingItems = useMemo(
     () => (
       <Box flexDirection="column" key="pending-items-group">
         {pendingHistoryItems.map((item, i) => {
           const prevType =
-            i === 0
-              ? uiState.history.at(-1)?.type
-              : pendingHistoryItems[i - 1]?.type;
+            i === 0 ? lastCommittedItemType : pendingHistoryItems[i - 1]?.type;
           const isFirstThinking =
             item.type === 'thinking' && prevType !== 'thinking';
           const isFirstAfterThinking =
@@ -171,7 +176,7 @@ export const MainContent = () => {
             (item.type === 'tool_group' && prevType !== 'tool_group');
 
           return (
-            <HistoryItemDisplay
+            <MemoizedHistoryItemDisplay
               key={`pending-${i}`}
               availableTerminalHeight={
                 uiState.constrainHeight ? availableTerminalHeight : undefined
@@ -201,7 +206,7 @@ export const MainContent = () => {
       mainAreaWidth,
       showConfirmationQueue,
       confirmingTool,
-      uiState.history,
+      lastCommittedItemType,
     ],
   );
 
