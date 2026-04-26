@@ -6,6 +6,7 @@
 
 import { Box, Text } from 'ink';
 import { useUIState } from '../contexts/UIStateContext.js';
+import { useStreamingContext } from '../contexts/StreamingContext.js';
 import { AppHeader } from './AppHeader.js';
 import { HistoryItemDisplay } from './HistoryItemDisplay.js';
 import { QuittingDisplay } from './QuittingDisplay.js';
@@ -18,6 +19,9 @@ import { theme } from '../semantic-colors.js';
 export const AlternateBufferQuittingDisplay = () => {
   const { version } = useAppContext();
   const uiState = useUIState();
+  // H9: pendingHistoryItems is volatile (changes per stream chunk) — read from
+  // StreamingContext to avoid re-rendering on stable UIStateContext updates.
+  const { pendingHistoryItems } = useStreamingContext();
 
   const confirmingTool = useConfirmingTool();
   const showPromptedTool = confirmingTool !== null;
@@ -46,7 +50,7 @@ export const AlternateBufferQuittingDisplay = () => {
           commands={uiState.slashCommands}
         />
       ))}
-      {uiState.pendingHistoryItems.map((item, i) => (
+      {pendingHistoryItems.map((item, i) => (
         <HistoryItemDisplay
           key={i}
           availableTerminalHeight={undefined}

@@ -8,6 +8,7 @@ import { Box, Text, useIsScreenReaderEnabled } from 'ink';
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useAppContext } from '../contexts/AppContext.js';
 import { useUIState } from '../contexts/UIStateContext.js';
+import { useStreamingContext } from '../contexts/StreamingContext.js';
 import { theme } from '../semantic-colors.js';
 import { StreamingState } from '../types.js';
 import { UpdateNotification } from './UpdateNotification.js';
@@ -36,7 +37,11 @@ const MAX_STARTUP_WARNING_SHOW_COUNT = 3;
 
 export const Notifications = () => {
   const { startupWarnings } = useAppContext();
-  const { initError, streamingState, updateInfo } = useUIState();
+  // H9: streamingState is volatile — read from StreamingContext so this
+  // component only re-renders on streaming transitions, not on every stable
+  // UIStateContext update.
+  const { initError, updateInfo } = useUIState();
+  const { streamingState } = useStreamingContext();
 
   const isScreenReaderEnabled = useIsScreenReaderEnabled();
   const showInitError =
