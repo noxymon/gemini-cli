@@ -175,6 +175,79 @@ describe('LoopDetectionService', () => {
       }
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
+
+    // --- Failed-tool retry verification ---
+    // These tests verify that when a tool call fails and the model retries it,
+    // loop detection fires before execution runs away.
+
+    it('should detect a loop (Strike 1) when the same failing tool is retried 5 times', () => {
+      // Simulates: model calls run_shell_command, tool fails with an error,
+      // model retries the exact same call — 5 consecutive identical requests.
+      const failingCall = createToolCallRequestEvent('run_shell_command', {
+        command: 'nonexistent_binary --flag',
+      });
+
+      for (let i = 0; i < TOOL_CALL_LOOP_THRESHOLD - 1; i++) {
+        expect(service.addAndCheck(failingCall).count).toBe(0);
+      }
+      // 5th identical call → Strike 1
+      const result = service.addAndCheck(failingCall);
+      expect(result.count).toBe(1);
+      expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);
+    });
+
+    it('should reach Strike 2 and halt after clearDetection + another identical failing retry', () => {
+      // Simulates: Strike 1 recovery fires, model still retries the same failing tool.
+      const failingCall = createToolCallRequestEvent('run_shell_command', {
+        command: 'nonexistent_binary --flag',
+      });
+
+      // Drive to Strike 1
+      for (let i = 0; i < TOOL_CALL_LOOP_THRESHOLD; i++) {
+        service.addAndCheck(failingCall);
+      }
+      expect(service.addAndCheck(failingCall).count).toBe(1);
+
+      // Simulate _recoverFromLoop() → clearDetection()
+      service.clearDetection();
+
+      // Model still calls the same failing tool → Strike 2 immediately
+      const strike2 = service.addAndCheck(failingCall);
+      expect(strike2.count).toBe(2);
+    });
+
+    it('should detect a loop when the model varies args on each failing retry (same tool name)', () => {
+      // Simulates: tool always fails but the model changes args each turn
+      // (e.g. incrementing a line number). CONSECUTIVE_SAME_TOOL_NAME_THRESHOLD=50
+      // is the guard in this case.
+      const SAME_NAME_THRESHOLD = 50;
+      for (let i = 0; i < SAME_NAME_THRESHOLD - 1; i++) {
+        const event = createToolCallRequestEvent('read_file', {
+          path: `/some/file_${i}.ts`,
+        });
+        expect(service.addAndCheck(event).count).toBe(0);
+      }
+      // 50th call with the same tool name → loop detected
+      const lastEvent = createToolCallRequestEvent('read_file', {
+        path: '/some/file_final.ts',
+      });
+      const result = service.addAndCheck(lastEvent);
+      expect(result.count).toBe(1);
+      expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);
+    });
+
+    it('should NOT falsely detect a loop when different tools fail alternately', () => {
+      // Alternating between two different failing tools should not trigger
+      // the tool-call loop detector — only LLM or MAX_TURNS guards apply.
+      const callA = createToolCallRequestEvent('write_file', { path: '/a' });
+      const callB = createToolCallRequestEvent('read_file', { path: '/b' });
+
+      for (let i = 0; i < TOOL_CALL_LOOP_THRESHOLD * 3; i++) {
+        expect(service.addAndCheck(callA).count).toBe(0);
+        expect(service.addAndCheck(callB).count).toBe(0);
+      }
+      expect(loggers.logLoopDetected).not.toHaveBeenCalled();
+    });
   });
 
   describe('Content Loop Detection', () => {

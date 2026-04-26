@@ -7,7 +7,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readdirSync, copyFileSync } from 'node:fs';
 import { wasmLoader } from 'esbuild-plugin-wasm';
 
 let esbuild;
@@ -82,7 +82,7 @@ const commonAliases = {
 const cliConfig = {
   ...baseConfig,
   banner: {
-    js: `const require = (await import('node:module')).createRequire(import.meta.url); const __chunk_filename = (await import('node:url')).fileURLToPath(import.meta.url); const __chunk_dirname = (await import('node:path')).dirname(__chunk_filename);`,
+    js: `#!/usr/bin/env node\nconst require = (await import('node:module')).createRequire(import.meta.url); const __chunk_filename = (await import('node:url')).fileURLToPath(import.meta.url); const __chunk_dirname = (await import('node:path')).dirname(__chunk_filename);`,
   },
   entryPoints: { gemini: 'packages/cli/index.ts' },
   outdir: 'bundle',
@@ -127,10 +127,34 @@ const a2aServerConfig = {
   alias: commonAliases,
 };
 
+function copyPolicies() {
+  const src = path.join(
+    __dirname,
+    'packages',
+    'core',
+    'src',
+    'policy',
+    'policies',
+  );
+  const dest = path.join(__dirname, 'bundle', 'chunks', 'policies');
+  mkdirSync(dest, { recursive: true });
+  for (const file of readdirSync(src)) {
+    copyFileSync(path.join(src, file), path.join(dest, file));
+  }
+}
+
 Promise.allSettled([
   esbuild.build(cliConfig).then(({ metafile }) => {
     if (process.env.DEV === 'true') {
       writeFileSync('./bundle/esbuild.json', JSON.stringify(metafile, null, 2));
+    }
+    copyPolicies();
+    // Ensure the bundle is executable
+    try {
+      const { chmodSync } = require('node:fs');
+      chmodSync('./bundle/gemini.js', 0o755);
+    } catch {
+      // Ignore chmod errors if file doesn't exist or on unsupported platforms
     }
   }),
   esbuild.build(a2aServerConfig),

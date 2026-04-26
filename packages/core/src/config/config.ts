@@ -731,6 +731,7 @@ export interface ConfigParameters {
   planSettings?: PlanSettings;
   worktreeSettings?: WorktreeSettings;
   modelSteering?: boolean;
+  enableStreamWatchdog?: boolean;
   onModelChange?: (model: string) => void;
   mcpEnabled?: boolean;
   extensionsEnabled?: boolean;
@@ -832,6 +833,7 @@ export class Config implements McpContext, AgentLoopContext {
   private ideMode: boolean;
 
   private _activeModel: string;
+  private readonly enableStreamWatchdog: boolean;
   private readonly maxSessionTurns: number;
   private readonly listSessions: boolean;
   private readonly deleteSession: string | undefined;
@@ -1232,7 +1234,8 @@ export class Config implements McpContext, AgentLoopContext {
       this.isModelSteeringEnabled(),
     );
     ExecutionLifecycleService.setInjectionService(this.injectionService);
-    this.maxSessionTurns = params.maxSessionTurns ?? -1;
+    this.enableStreamWatchdog = params.enableStreamWatchdog ?? true;
+    this.maxSessionTurns = params.maxSessionTurns ?? 100;
     this.acpMode = params.acpMode ?? false;
     this.listSessions = params.listSessions ?? false;
     this.deleteSession = params.deleteSession;
@@ -1965,6 +1968,10 @@ export class Config implements McpContext, AgentLoopContext {
   resetBillingTurnState(overageStrategy?: OverageStrategy): void {
     this.creditsNotificationShown = false;
     this.billing.overageStrategy = overageStrategy ?? 'ask';
+  }
+
+  getEnableStreamWatchdog(): boolean {
+    return this.enableStreamWatchdog;
   }
 
   getMaxSessionTurns(): number {

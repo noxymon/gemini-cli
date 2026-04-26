@@ -26,6 +26,7 @@ export type FakeResponse =
   | {
       method: 'generateContentStream';
       response: GenerateContentResponse[];
+      hang?: boolean;
     }
   | {
       method: 'countTokens';
@@ -97,13 +98,32 @@ export class FakeContentGenerator implements ContentGenerator {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     role: LlmRole,
   ): Promise<AsyncGenerator<GenerateContentResponse>> {
-    const responses = this.getNextResponse('generateContentStream', request);
+    const responseData = this.responses[this.callCounter++];
+    if (!responseData) {
+      throw new Error(
+        `No more mock responses for generateContentStream, got request:\n` +
+          safeJsonStringify(request),
+      );
+    }
+    if (responseData.method !== 'generateContentStream') {
+      throw new Error(
+        `Unexpected response type, next response was for ${responseData.method} but expected generateContentStream`,
+      );
+    }
+
+    const responses = responseData.response;
+    const hang = responseData.hang;
+
     async function* stream() {
       for (const response of responses) {
         yield Object.setPrototypeOf(
           response,
           GenerateContentResponse.prototype,
         );
+      }
+      if (hang) {
+        // Simulate a hung stream that never ends
+        await new Promise(() => {});
       }
     }
     return stream();

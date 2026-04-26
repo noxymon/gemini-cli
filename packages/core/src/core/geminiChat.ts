@@ -58,6 +58,7 @@ import {
   createAvailabilityContextProvider,
 } from '../availability/policyHelpers.js';
 import { coreEvents } from '../utils/events.js';
+import { debugLogger } from '../utils/debugLogger.js';
 import type { AgentLoopContext } from '../config/agent-loop-context.js';
 import { debugLogger } from '../utils/debugLogger.js';
 
@@ -96,6 +97,8 @@ const MID_STREAM_RETRY_OPTIONS: MidStreamRetryOptions = {
   initialDelayMs: 1000,
   useExponentialBackoff: true,
 };
+
+const STREAM_IDLE_TIMEOUT_MS = 90000; // 90 seconds
 
 export const SYNTHETIC_THOUGHT_SIGNATURE = 'skip_thought_signature_validator';
 
@@ -984,115 +987,137 @@ export class GeminiChat {
     const callIndexToId = new Map<number, string>();
     let runningFunctionCallCounter = 0;
 
-    for await (const chunk of streamResponse) {
-      const currentChunkStartCounter = runningFunctionCallCounter;
-      const candidateWithReason = chunk?.candidates?.find(
-        (candidate) => candidate.finishReason,
-      );
-      if (candidateWithReason) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        finishReason = candidateWithReason.finishReason as FinishReason;
+    let watchdogTimer: NodeJS.Timeout | undefined;
+    const resetWatchdog = () => {
+      if (!this.context.config.getEnableStreamWatchdog?.()) {
+        return;
       }
+      if (watchdogTimer) clearTimeout(watchdogTimer);
+      watchdogTimer = setTimeout(() => {
+        debugLogger.error('Stream idle timeout exceeded');
+        // We don't have direct access to the abort controller here,
+        // but throwing will break the async generator loop.
+      }, STREAM_IDLE_TIMEOUT_MS);
+    };
 
-      if (chunk.functionCalls && chunk.functionCalls.length > 0) {
-        if (this.context.config.isContextManagementEnabled()) {
-          for (let i = 0; i < chunk.functionCalls.length; i++) {
-            const fnCall = chunk.functionCalls[i];
-            const globalIndex = currentChunkStartCounter + i;
-            if (!fnCall.id) {
-              let id = callIndexToId.get(globalIndex);
-              if (!id) {
-                id = `synth_${this.context.promptId}_${Date.now()}_${this.callCounter++}`;
-                callIndexToId.set(globalIndex, id);
-                debugLogger.log(
-                  `[GeminiChat] Assigned synthetic ID: ${id} to tool at index ${globalIndex}: ${fnCall.name}`,
-                );
-              }
-              fnCall.id = id;
-            }
-            const name = fnCall.name?.trim() || 'generic_tool';
-            if (fnCall.id && !fnCall.id.startsWith(`${name}__`)) {
-              fnCall.id = `${name}__${fnCall.id}`;
-            }
-            finalFunctionCallsMap.set(fnCall.id, fnCall);
-          }
-          runningFunctionCallCounter += chunk.functionCalls.length;
-        } else {
-          for (const fnCall of chunk.functionCalls) {
-            const name = fnCall.name?.trim() || 'generic_tool';
-            if (fnCall.id && !fnCall.id.startsWith(`${name}__`)) {
-              fnCall.id = `${name}__${fnCall.id}`;
-            }
-          }
-          legacyFunctionCalls.push(...chunk.functionCalls);
-        }
-      }
-      if (isValidResponse(chunk)) {
-        const content = chunk.candidates?.[0]?.content;
-        if (content?.parts) {
-          if (content.parts.some((part) => part.thought)) {
-            // Record thoughts
-            hasThoughts = true;
-            this.recordThoughtFromContent(content);
-          }
-          if (content.parts.some((part) => part.functionCall)) {
-            hasToolCall = true;
-          }
-
-          let localFunctionCallCounter = 0;
-          modelResponseParts.push(
-            ...content.parts
-              .filter((part) => !part.thought)
-              .map((part) => {
-                if (!this.context.config.isContextManagementEnabled()) {
-                  return part;
-                }
-                let callIndex: number | undefined;
-                if (part.functionCall) {
-                  callIndex =
-                    currentChunkStartCounter + localFunctionCallCounter++;
-                }
-                return {
-                  ...part,
-                  callIndex,
-                };
-              }),
-          );
-        }
-      }
-
-      // Record token usage if this chunk has usageMetadata
-      if (chunk.usageMetadata) {
-        this.chatRecordingService.recordMessageTokens(chunk.usageMetadata);
-        if (chunk.usageMetadata.promptTokenCount !== undefined) {
-          this.lastPromptTokenCount = chunk.usageMetadata.promptTokenCount;
-        }
-      }
-
-      const hookSystem = this.context.config.getHookSystem();
-      if (originalRequest && chunk && hookSystem) {
-        const hookResult = await hookSystem.fireAfterModelEvent(
-          originalRequest,
-          chunk,
+    try {
+      for await (const chunk of streamResponse) {
+        resetWatchdog();
+        const currentChunkStartCounter = runningFunctionCallCounter;
+        const candidateWithReason = chunk?.candidates?.find(
+          (candidate) => candidate.finishReason,
         );
-
-        if (hookResult.stopped) {
-          throw new AgentExecutionStoppedError(
-            hookResult.reason || 'Agent execution stopped by hook',
-          );
+        if (candidateWithReason) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          finishReason = candidateWithReason.finishReason as FinishReason;
         }
 
-        if (hookResult.blocked) {
-          throw new AgentExecutionBlockedError(
-            hookResult.reason || 'Agent execution blocked by hook',
-            hookResult.response,
-          );
+        if (chunk.functionCalls && chunk.functionCalls.length > 0) {
+          if (this.context.config.isContextManagementEnabled()) {
+            for (let i = 0; i < chunk.functionCalls.length; i++) {
+              const fnCall = chunk.functionCalls[i];
+              const globalIndex = currentChunkStartCounter + i;
+              if (!fnCall.id) {
+                let id = callIndexToId.get(globalIndex);
+                if (!id) {
+                  id = `synth_${this.context.promptId}_${Date.now()}_${this.callCounter++}`;
+                  callIndexToId.set(globalIndex, id);
+                  debugLogger.log(
+                    `[GeminiChat] Assigned synthetic ID: ${id} to tool at index ${globalIndex}: ${fnCall.name}`,
+                  );
+                }
+                fnCall.id = id;
+              }
+              const name = fnCall.name?.trim() || 'generic_tool';
+              if (fnCall.id && !fnCall.id.startsWith(`${name}__`)) {
+                fnCall.id = `${name}__${fnCall.id}`;
+              }
+              finalFunctionCallsMap.set(fnCall.id, fnCall);
+            }
+            runningFunctionCallCounter += chunk.functionCalls.length;
+          } else {
+            for (const fnCall of chunk.functionCalls) {
+              const name = fnCall.name?.trim() || 'generic_tool';
+              if (fnCall.id && !fnCall.id.startsWith(`${name}__`)) {
+                fnCall.id = `${name}__${fnCall.id}`;
+              }
+            }
+            legacyFunctionCalls.push(...chunk.functionCalls);
+          }
+        }
+        if (isValidResponse(chunk)) {
+          const content = chunk.candidates?.[0]?.content;
+          if (content?.parts) {
+            if (content.parts.some((part) => part.thought)) {
+              // Record thoughts
+              hasThoughts = true;
+              this.recordThoughtFromContent(content);
+            }
+            if (content.parts.some((part) => part.functionCall)) {
+              hasToolCall = true;
+            }
+
+            let localFunctionCallCounter = 0;
+            modelResponseParts.push(
+              ...content.parts
+                .filter((part) => !part.thought)
+                .map((part) => {
+                  if (!this.context.config.isContextManagementEnabled()) {
+                    return part;
+                  }
+                  let callIndex: number | undefined;
+                  if (part.functionCall) {
+                    callIndex =
+                      currentChunkStartCounter + localFunctionCallCounter++;
+                  }
+                  return {
+                    ...part,
+                    callIndex,
+                  };
+                }),
+            );
+          }
         }
 
-        yield hookResult.response;
-      } else {
-        yield chunk;
+        // Record token usage if this chunk has usageMetadata
+        if (chunk.usageMetadata) {
+          this.chatRecordingService.recordMessageTokens(chunk.usageMetadata);
+          if (chunk.usageMetadata.promptTokenCount !== undefined) {
+            this.lastPromptTokenCount = chunk.usageMetadata.promptTokenCount;
+          }
+        }
+
+        const hookSystem = this.context.config.getHookSystem();
+        if (originalRequest && chunk && hookSystem) {
+          const hookResult = await hookSystem.fireAfterModelEvent(
+            originalRequest,
+            chunk,
+          );
+
+          if (hookResult.stopped) {
+            throw new AgentExecutionStoppedError(
+              hookResult.reason || 'Agent execution stopped by hook',
+            );
+          }
+
+          if (hookResult.blocked) {
+            throw new AgentExecutionBlockedError(
+              hookResult.reason || 'Agent execution blocked by hook',
+              hookResult.response,
+            );
+          }
+
+          yield hookResult.response;
+        } else {
+          yield chunk;
+        }
+
+        if (finishReason) {
+          break;
+        }
       }
+    } finally {
+      if (watchdogTimer) clearTimeout(watchdogTimer);
     }
 
     // String thoughts and consolidate text parts.

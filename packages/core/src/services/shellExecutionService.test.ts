@@ -491,6 +491,8 @@ describe('ShellExecutionService', () => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           headlessTerminal: mockHeadlessTerminal as any,
           command: 'some-command',
+          accumulatedOutputChunks: [],
+          lastProcessedLine: 0,
         });
     });
 
