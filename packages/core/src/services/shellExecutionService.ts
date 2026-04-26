@@ -47,7 +47,7 @@ import {
 } from './executionLifecycleService.js';
 const { Terminal } = pkg;
 
-const MAX_CHILD_PROCESS_BUFFER_SIZE = 16 * 1024 * 1024; // 16MB
+export const MAX_CHILD_PROCESS_BUFFER_SIZE = 16 * 1024 * 1024; // 16MB
 
 /**
  * An environment variable that is set for shell executions. This can be used
@@ -129,8 +129,7 @@ interface ActivePty {
 interface ActiveChildProcess {
   process: ChildProcess;
   state: {
-    outputChunks: string[];
-    outputLength: number;
+    output: string;
     truncated: boolean;
     sniffChunks: Buffer[];
     binaryBytesReceived: number;
@@ -389,34 +388,34 @@ export class ShellExecutionService {
     );
   }
 
-  private static appendChunkAndTruncate(
-    chunks: string[],
-    currentLength: number,
-    newChunk: string,
+  private static appendAndTruncate(
+    currentBuffer: string,
+    chunk: string,
     maxSize: number,
-  ): { newLength: number; truncated: boolean } {
-    chunks.push(newChunk);
-    let newLength = currentLength + newChunk.length;
-    let truncated = false;
+  ): { newBuffer: string; truncated: boolean } {
+    const chunkLength = chunk.length;
+    const currentLength = currentBuffer.length;
+    const newTotalLength = currentLength + chunkLength;
 
-    while (newLength > maxSize && chunks.length > 0) {
-      const first = chunks[0];
-      if (newLength - first.length >= maxSize) {
-        // Can discard the whole first chunk
-        chunks.shift();
-        newLength -= first.length;
-        truncated = true;
-      } else {
-        // Must truncate the first chunk partially
-        const toRemove = newLength - maxSize;
-        chunks[0] = first.slice(toRemove);
-        newLength -= toRemove;
-        truncated = true;
-        break;
-      }
+    if (newTotalLength <= maxSize) {
+      return { newBuffer: currentBuffer + chunk, truncated: false };
     }
 
-    return { newLength, truncated };
+    // Truncation is needed.
+    if (chunkLength >= maxSize) {
+      // The new chunk is larger than or equal to the max buffer size.
+      // The new buffer will be the tail of the new chunk.
+      return {
+        newBuffer: chunk.substring(chunkLength - maxSize),
+        truncated: true,
+      };
+    }
+
+    // The combined buffer exceeds the max size, but the new chunk is smaller than it.
+    // We need to truncate the current buffer from the beginning to make space.
+    const charsToTrim = newTotalLength - maxSize;
+    const truncatedBuffer = currentBuffer.substring(charsToTrim);
+    return { newBuffer: truncatedBuffer + chunk, truncated: true };
   }
 
   private static async prepareExecution(
@@ -614,8 +613,7 @@ export class ShellExecutionService {
       });
 
       const state = {
-        outputChunks: [] as string[],
-        outputLength: 0,
+        output: '',
         truncated: false,
         sniffChunks: [] as Buffer[],
         binaryBytesReceived: 0,
@@ -633,9 +631,8 @@ export class ShellExecutionService {
       const lifecycleHandle = child.pid
         ? ExecutionLifecycleService.attachExecution(child.pid, {
             executionMethod: 'child_process',
-            getBackgroundOutput: () => state.outputChunks.join(''),
-            getSubscriptionSnapshot: () =>
-              state.outputChunks.join('') || undefined,
+            getBackgroundOutput: () => state.output,
+            getSubscriptionSnapshot: () => state.output || undefined,
             writeInput: (input) => {
               const stdin = child.stdin as Writable | null;
               if (stdin) {
@@ -725,13 +722,13 @@ export class ShellExecutionService {
           const decoder = stream === 'stdout' ? stdoutDecoder : stderrDecoder;
           const decodedChunk = decoder.decode(data, { stream: true });
 
-          const { newLength, truncated } = this.appendChunkAndTruncate(
-            state.outputChunks,
-            state.outputLength,
-            decodedChunk,
+          const strippedChunk = stripAnsi(decodedChunk);
+          const { newBuffer, truncated } = this.appendAndTruncate(
+            state.output,
+            strippedChunk,
             MAX_CHILD_PROCESS_BUFFER_SIZE,
           );
-          state.outputLength = newLength;
+          state.output = newBuffer;
           if (truncated) {
             state.truncated = true;
           }
@@ -747,7 +744,7 @@ export class ShellExecutionService {
               if (ShellExecutionService.backgroundLogPids.has(child.pid)) {
                 ShellExecutionService.syncBackgroundLog(
                   child.pid,
-                  decodedChunk,
+                  strippedChunk,
                 );
               }
             }
@@ -772,7 +769,7 @@ export class ShellExecutionService {
         cleanup();
         cmdCleanup?.();
 
-        let combinedOutput = state.outputChunks.join('');
+        let combinedOutput = state.output;
         if (state.truncated) {
           const truncationMessage = `\n[GEMINI_CLI_WARNING: Output truncated. The buffer is limited to ${
             MAX_CHILD_PROCESS_BUFFER_SIZE / (1024 * 1024)
@@ -780,7 +777,7 @@ export class ShellExecutionService {
           combinedOutput += truncationMessage;
         }
 
-        const finalStrippedOutput = stripAnsi(combinedOutput).trim();
+        const finalStrippedOutput = combinedOutput.trim();
         const exitCode = code;
         const exitSignal =
           signal && os.constants.signals
@@ -858,12 +855,7 @@ export class ShellExecutionService {
         if (stdoutDecoder) {
           const remaining = stdoutDecoder.decode();
           if (remaining) {
-            ShellExecutionService.appendChunkAndTruncate(
-              state.outputChunks,
-              state.outputLength,
-              remaining,
-              MAX_CHILD_PROCESS_BUFFER_SIZE,
-            );
+            state.output += stripAnsi(remaining);
             if (isStreamingRawContent) {
               const event: ShellOutputEvent = {
                 type: 'data',
@@ -879,12 +871,7 @@ export class ShellExecutionService {
         if (stderrDecoder) {
           const remaining = stderrDecoder.decode();
           if (remaining) {
-            ShellExecutionService.appendChunkAndTruncate(
-              state.outputChunks,
-              state.outputLength,
-              remaining,
-              MAX_CHILD_PROCESS_BUFFER_SIZE,
-            );
+            state.output += stripAnsi(remaining);
             if (isStreamingRawContent) {
               const event: ShellOutputEvent = {
                 type: 'data',
@@ -985,11 +972,9 @@ export class ShellExecutionService {
 
       const lineContent = line.translateToString(trimRight);
 
-      // If the previous line was wrapped, append to the last chunk
       if (line.isWrapped && entry.accumulatedOutputChunks.length > 0) {
-        entry.accumulatedOutputChunks[
-          entry.accumulatedOutputChunks.length - 1
-        ] += lineContent;
+        entry.accumulatedOutputChunks[entry.accumulatedOutputChunks.length - 1] +=
+          lineContent;
       } else {
         entry.accumulatedOutputChunks.push(lineContent);
       }
@@ -1143,11 +1128,7 @@ export class ShellExecutionService {
 
         if (!shellExecutionConfig.disableDynamicLineTrimming) {
           if (!hasStartedOutput) {
-            const bufferText = getFullBufferText(headlessTerminal);
-            if (bufferText.trim().length === 0) {
-              return;
-            }
-            hasStartedOutput = true;
+            return;
           }
         }
 
@@ -1286,6 +1267,9 @@ export class ShellExecutionService {
 
                 isWriting = true;
                 headlessTerminal.write(decodedChunk, () => {
+                  if (!hasStartedOutput) {
+                    hasStartedOutput = true;
+                  }
                   render();
                   isWriting = false;
                   resolveChunk();
@@ -1351,8 +1335,8 @@ export class ShellExecutionService {
               startLine,
               endLine,
             );
-            let finalOutput = '';
             const entry = ShellExecutionService.activePtys.get(ptyPid);
+            let finalOutput = '';
             if (entry) {
               ShellExecutionService.updateActivePtyOutputCache(entry);
               finalOutput = entry.accumulatedOutputChunks.join('\n');
@@ -1361,7 +1345,7 @@ export class ShellExecutionService {
             }
 
             // Dispose the headless terminal to free scrollback buffers.
-            // This must happen after we extract the output.
+            // This must happen after output is extracted above.
             try {
               headlessTerminal.dispose();
             } catch {
@@ -1568,9 +1552,7 @@ export class ShellExecutionService {
           0,
         );
         this.backgroundLogSizes.set(pid, bytesWritten);
-      } else if (activeChild) {
-        stream.write('DEBUG: In activeChild branch');
-        const output = activeChild.state.outputChunks.join('');
+        const output = activeChild.state.output;
         if (output) {
           const stripped = stripAnsi(output) + '\n';
           stream.write(stripped);
