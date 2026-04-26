@@ -20,7 +20,7 @@ export const ShowMoreLines = ({
   isOverflowing: isOverflowingProp,
 }: ShowMoreLinesProps) => {
   const overflowState = useOverflowState();
-  const streamingState = useStreamingContext();
+  const { streamingState } = useStreamingContext();
 
   const isOverflowing =
     isOverflowingProp ??
