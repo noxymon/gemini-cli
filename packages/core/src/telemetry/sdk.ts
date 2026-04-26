@@ -12,12 +12,8 @@ import {
   metrics,
   propagation,
 } from '@opentelemetry/api';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-grpc';
-import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-grpc';
-import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-grpc';
-import { OTLPTraceExporter as OTLPTraceExporterHttp } from '@opentelemetry/exporter-trace-otlp-http';
-import { OTLPLogExporter as OTLPLogExporterHttp } from '@opentelemetry/exporter-logs-otlp-http';
-import { OTLPMetricExporter as OTLPMetricExporterHttp } from '@opentelemetry/exporter-metrics-otlp-http';
+import type { SpanExporter } from '@opentelemetry/sdk-trace-base';
+import type { LogRecordExporter } from '@opentelemetry/sdk-logs';
 import { CompressionAlgorithm } from '@opentelemetry/otlp-exporter-base';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
@@ -252,18 +248,8 @@ export async function initializeTelemetry(
   const useDirectGcpExport =
     telemetryTarget === TelemetryTarget.GCP && !useCollector;
 
-  let spanExporter:
-    | OTLPTraceExporter
-    | OTLPTraceExporterHttp
-    | GcpTraceExporter
-    | FileSpanExporter
-    | ConsoleSpanExporter;
-  let logExporter:
-    | OTLPLogExporter
-    | OTLPLogExporterHttp
-    | GcpLogExporter
-    | FileLogExporter
-    | ConsoleLogRecordExporter;
+  let spanExporter: SpanExporter;
+  let logExporter: LogRecordExporter;
 
   if (useDirectGcpExport) {
     debugLogger.log(
@@ -280,36 +266,48 @@ export async function initializeTelemetry(
     });
   } else if (useOtlp) {
     if (otlpProtocol === 'http') {
-      const buildUrl = (path: string) => {
+      const buildUrl = (signalPath: string) => {
         const url = new URL(parsedEndpoint);
         // Join the existing pathname with the new path, handling trailing slashes.
-        url.pathname = [url.pathname.replace(/\/$/, ''), path].join('/');
+        url.pathname = [url.pathname.replace(/\/$/, ''), signalPath].join('/');
         return url.href;
       };
-      spanExporter = new OTLPTraceExporterHttp({
+      // Load HTTP exporters lazily — gRPC variants are not bundled in this path.
+      // We load modules once and construct exporters with signal-specific URLs.
+      const [traceModule, logsModule, metricsModule] = await Promise.all([
+        import('@opentelemetry/exporter-trace-otlp-http'),
+        import('@opentelemetry/exporter-logs-otlp-http'),
+        import('@opentelemetry/exporter-metrics-otlp-http'),
+      ]);
+      spanExporter = new traceModule.OTLPTraceExporter({
         url: buildUrl('v1/traces'),
       });
-      logExporter = new OTLPLogExporterHttp({
+      logExporter = new logsModule.OTLPLogExporter({
         url: buildUrl('v1/logs'),
       });
       metricReader = new PeriodicExportingMetricReader({
-        exporter: new OTLPMetricExporterHttp({
+        exporter: new metricsModule.OTLPMetricExporter({
           url: buildUrl('v1/metrics'),
         }),
         exportIntervalMillis: 10000,
       });
     } else {
-      // grpc
-      spanExporter = new OTLPTraceExporter({
+      // grpc — load gRPC exporters lazily; HTTP variants are not bundled in this path.
+      const [traceModule, logsModule, metricsModule] = await Promise.all([
+        import('@opentelemetry/exporter-trace-otlp-grpc'),
+        import('@opentelemetry/exporter-logs-otlp-grpc'),
+        import('@opentelemetry/exporter-metrics-otlp-grpc'),
+      ]);
+      spanExporter = new traceModule.OTLPTraceExporter({
         url: parsedEndpoint,
         compression: CompressionAlgorithm.GZIP,
       });
-      logExporter = new OTLPLogExporter({
+      logExporter = new logsModule.OTLPLogExporter({
         url: parsedEndpoint,
         compression: CompressionAlgorithm.GZIP,
       });
       metricReader = new PeriodicExportingMetricReader({
-        exporter: new OTLPMetricExporter({
+        exporter: new metricsModule.OTLPMetricExporter({
           url: parsedEndpoint,
           compression: CompressionAlgorithm.GZIP,
         }),
