@@ -249,6 +249,7 @@ describe('Gemini Client (client.ts)', () => {
       }),
       getGeminiClient: vi.fn(),
       getRetryFetchErrors: vi.fn().mockReturnValue(true),
+      getEnableStreamWatchdog: vi.fn().mockReturnValue(true),
       getMaxAttempts: vi.fn().mockReturnValue(3),
       getModelRouterService: vi
         .fn()
@@ -1263,7 +1264,9 @@ ${JSON.stringify(
       }
 
       // Assert
-      expect(events).toContainEqual({ type: GeminiEventType.LoopDetected });
+      expect(events).toContainEqual(
+        expect.objectContaining({ type: GeminiEventType.LoopDetected }),
+      );
       expect(finalResult).toBeInstanceOf(Turn);
     });
 
@@ -3134,7 +3137,9 @@ ${JSON.stringify(
         }
 
         // Assert
-        expect(events).toContainEqual({ type: GeminiEventType.LoopDetected });
+        expect(events).toContainEqual(
+          expect.objectContaining({ type: GeminiEventType.LoopDetected }),
+        );
         expect(sendMessageStreamSpy).toHaveBeenCalledTimes(2); // One original, one recovery
       });
 
@@ -3257,7 +3262,9 @@ ${JSON.stringify(
         }
 
         // Assert
-        expect(events).toContainEqual({ type: GeminiEventType.LoopDetected });
+        expect(events).toContainEqual(
+          expect.objectContaining({ type: GeminiEventType.LoopDetected }),
+        );
         expect(sendMessageStreamSpy).toHaveBeenCalledTimes(2);
       });
 

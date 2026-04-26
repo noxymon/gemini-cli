@@ -58,6 +58,7 @@ import {
 } from '../sandbox/utils/proactivePermissions.js';
 
 export const OUTPUT_UPDATE_INTERVAL_MS = 1000;
+export const OUTPUT_SIZE_LIMIT = 10 * 1024 * 1024; // 10MB
 
 // Delay so user does not see the output of the process before the process is moved to the background.
 const BACKGROUND_DELAY_MS = 200;
@@ -561,6 +562,26 @@ export class ShellToolInvocation extends BaseToolInvocation<
               default: {
                 throw new Error('An unhandled ShellOutputEvent was found.');
               }
+            }
+
+            // Check if output exceeds limit
+            const currentSize =
+              typeof cumulativeOutput === 'string'
+                ? cumulativeOutput.length
+                : // AnsiOutput is an array of lines, each line an array of tokens
+                  cumulativeOutput.reduce(
+                    (total, line) =>
+                      total +
+                      line.reduce((l, token) => l + token.text.length, 0),
+                    0,
+                  );
+
+            if (currentSize > OUTPUT_SIZE_LIMIT) {
+              combinedController.abort(
+                new Error(
+                  `Output size limit exceeded (${formatBytes(OUTPUT_SIZE_LIMIT)}). Execution halted.`,
+                ),
+              );
             }
 
             if (shouldUpdate && !this.params.is_background) {
