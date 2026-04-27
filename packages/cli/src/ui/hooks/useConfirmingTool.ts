@@ -5,7 +5,7 @@
  */
 
 import { useMemo } from 'react';
-import { useUIState } from '../contexts/UIStateContext.js';
+import { useStreamingContext } from '../contexts/StreamingContext.js';
 import {
   getConfirmingToolState,
   type ConfirmingToolState,
@@ -16,11 +16,15 @@ export type { ConfirmingToolState } from '../utils/confirmingTool.js';
 /**
  * Selects the "Head" of the confirmation queue.
  * Returns the first tool in the pending state that requires confirmation.
+ *
+ * H9: Uses StreamingContext instead of UIStateContext so this hook only
+ * triggers a re-render when pendingHistoryItems changes, not on every
+ * stable-state update.
  */
 export function useConfirmingTool(): ConfirmingToolState | null {
   // We use pendingHistoryItems to ensure we capture tools from both
   // Gemini responses and Slash commands.
-  const { pendingHistoryItems } = useUIState();
+  const { pendingHistoryItems } = useStreamingContext();
 
   return useMemo(
     () => getConfirmingToolState(pendingHistoryItems),

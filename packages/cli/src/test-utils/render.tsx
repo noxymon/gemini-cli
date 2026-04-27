@@ -25,7 +25,10 @@ import { ConfigContext } from '../ui/contexts/ConfigContext.js';
 import { VimModeProvider } from '../ui/contexts/VimModeContext.js';
 import { MouseProvider } from '../ui/contexts/MouseContext.js';
 import { ScrollProvider } from '../ui/contexts/ScrollProvider.js';
-import { StreamingContext } from '../ui/contexts/StreamingContext.js';
+import {
+  StreamingContext,
+  type StreamingContextValue,
+} from '../ui/contexts/StreamingContext.js';
 import {
   type UIActions,
   UIActionsContext,
@@ -750,7 +753,20 @@ export const renderWithProviders = async (
                   <ShellFocusContext.Provider value={shellFocus}>
                     <SessionStatsProvider sessionId={config.getSessionId()}>
                       <StreamingContext.Provider
-                        value={finalUiState.streamingState}
+                        value={(() => {
+                          const sv: StreamingContextValue = {
+                            streamingState: finalUiState.streamingState,
+                            pendingHistoryItems:
+                              finalUiState.pendingHistoryItems ?? [],
+                            thought: null,
+                            elapsedTime: 0,
+                            currentLoadingPhrase: undefined,
+                            currentTip: undefined,
+                            currentWittyPhrase: undefined,
+                            activeHooks: [],
+                          };
+                          return sv;
+                        })()}
                       >
                         <UIActionsContext.Provider value={finalUIActions}>
                           <OverflowProvider>

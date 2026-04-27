@@ -37,6 +37,7 @@ import {
 } from '@google/gemini-cli-core';
 import { buildToolVisibilityContextFromDisplay } from '../../utils/historyUtils.js';
 import { useUIState } from '../../contexts/UIStateContext.js';
+import { useStreamingContext } from '../../contexts/StreamingContext.js';
 import { getToolGroupBorderAppearance } from '../../utils/borderStyles.js';
 import { useSettings } from '../../contexts/SettingsContext.js';
 import {
@@ -133,12 +134,10 @@ export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
     [allToolCalls, isLowErrorVerbosity],
   );
 
-  const {
-    activePtyId,
-    embeddedShellFocused,
-    backgroundTasks,
-    pendingHistoryItems,
-  } = useUIState();
+  const { activePtyId, embeddedShellFocused, backgroundTasks } = useUIState();
+  // H9: pendingHistoryItems is volatile — read from StreamingContext to avoid
+  // re-rendering ToolGroupMessage on every stable UIStateContext update.
+  const { pendingHistoryItems } = useStreamingContext();
 
   const config = useConfig();
 

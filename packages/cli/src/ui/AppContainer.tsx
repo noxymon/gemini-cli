@@ -25,6 +25,10 @@ import {
 import { App } from './App.js';
 import { AppContext } from './contexts/AppContext.js';
 import { UIStateContext, type UIState } from './contexts/UIStateContext.js';
+import {
+  StreamingContext,
+  type StreamingContextValue,
+} from './contexts/StreamingContext.js';
 import { QuotaContext } from './contexts/QuotaContext.js';
 import {
   UIActionsContext,
@@ -2669,6 +2673,40 @@ Logging in with Google... Restarting Gemini CLI to continue.
     ],
   );
 
+  /**
+   * H9 — Volatile streaming slice, memoized independently of `uiState`.
+   *
+   * By keeping this as a separate React context value, components that
+   * subscribe to `StreamingContext` (via `useStreamingContext()`) will ONLY
+   * re-render when one of these volatile fields changes — not on every update
+   * to any field in the much-larger `UIStateContext`.
+   *
+   * Fields here are the ones that mutate on every stream chunk and drive the
+   * hot render path during model responses.
+   */
+  const streamingContextValue: StreamingContextValue = useMemo(
+    () => ({
+      streamingState,
+      pendingHistoryItems,
+      thought,
+      elapsedTime,
+      currentLoadingPhrase,
+      currentTip,
+      currentWittyPhrase,
+      activeHooks,
+    }),
+    [
+      streamingState,
+      pendingHistoryItems,
+      thought,
+      elapsedTime,
+      currentLoadingPhrase,
+      currentTip,
+      currentWittyPhrase,
+      activeHooks,
+    ],
+  );
+
   const exitPrivacyNotice = useCallback(
     () => setShowPrivacyNotice(false),
     [setShowPrivacyNotice],
@@ -2848,36 +2886,45 @@ Logging in with Google... Restarting Gemini CLI to continue.
 
   return (
     <UIStateContext.Provider value={uiState}>
-      <QuotaContext.Provider value={quotaState}>
-        <InputContext.Provider value={inputState}>
-          <UIActionsContext.Provider value={uiActions}>
-            <ConfigContext.Provider value={config}>
-              <AppContext.Provider
-                value={{
-                  version: props.version,
-                  startupWarnings: props.startupWarnings || [],
-                }}
-              >
-                <ToolActionsProvider
-                  config={config}
-                  toolCalls={allToolCalls}
-                  isExpanded={isExpanded}
-                  toggleExpansion={toggleExpansion}
-                  toggleAllExpansion={toggleAllExpansion}
+      {/*
+       * H9 — StreamingContext is provided here (rather than in App.tsx) so its
+       * value is a separately-memoized object.  Components that subscribe to
+       * StreamingContext will only re-render when volatile streaming fields
+       * (pendingHistoryItems, streamingState, thought, …) change, not on every
+       * update to any field in UIStateContext.
+       */}
+      <StreamingContext.Provider value={streamingContextValue}>
+        <QuotaContext.Provider value={quotaState}>
+          <InputContext.Provider value={inputState}>
+            <UIActionsContext.Provider value={uiActions}>
+              <ConfigContext.Provider value={config}>
+                <AppContext.Provider
+                  value={{
+                    version: props.version,
+                    startupWarnings: props.startupWarnings || [],
+                  }}
                 >
-                  <ShellFocusContext.Provider value={isFocused}>
-                    <MouseProvider mouseEventsEnabled={mouseMode}>
-                      <ScrollProvider>
-                        <App key={`app-${forceRerenderKey}`} />
-                      </ScrollProvider>
-                    </MouseProvider>
-                  </ShellFocusContext.Provider>
-                </ToolActionsProvider>
-              </AppContext.Provider>
-            </ConfigContext.Provider>
-          </UIActionsContext.Provider>
-        </InputContext.Provider>
-      </QuotaContext.Provider>
+                  <ToolActionsProvider
+                    config={config}
+                    toolCalls={allToolCalls}
+                    isExpanded={isExpanded}
+                    toggleExpansion={toggleExpansion}
+                    toggleAllExpansion={toggleAllExpansion}
+                  >
+                    <ShellFocusContext.Provider value={isFocused}>
+                      <MouseProvider mouseEventsEnabled={mouseMode}>
+                        <ScrollProvider>
+                          <App key={`app-${forceRerenderKey}`} />
+                        </ScrollProvider>
+                      </MouseProvider>
+                    </ShellFocusContext.Provider>
+                  </ToolActionsProvider>
+                </AppContext.Provider>
+              </ConfigContext.Provider>
+            </UIActionsContext.Provider>
+          </InputContext.Provider>
+        </QuotaContext.Provider>
+      </StreamingContext.Provider>
     </UIStateContext.Provider>
   );
 };

@@ -39,7 +39,7 @@ export const GeminiRespondingSpinner: React.FC<
   isHookActive = false,
   color,
 }) => {
-  const streamingState = useStreamingContext();
+  const { streamingState } = useStreamingContext();
   const isScreenReaderEnabled = useIsScreenReaderEnabled();
 
   // If a hook is active, we want to show the hook icon (nonRespondingDisplay)

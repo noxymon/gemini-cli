@@ -16,6 +16,18 @@ vi.mock('../contexts/OverflowContext.js');
 vi.mock('../contexts/StreamingContext.js');
 vi.mock('../hooks/useAlternateBuffer.js');
 
+/** Helper to build a minimal StreamingContextValue for tests. */
+const makeStreamingContext = (streamingState: StreamingState) => ({
+  streamingState,
+  pendingHistoryItems: [],
+  thought: null,
+  elapsedTime: 0,
+  currentLoadingPhrase: undefined,
+  currentTip: undefined,
+  currentWittyPhrase: undefined,
+  activeHooks: [],
+});
+
 describe('ShowMoreLines', () => {
   const mockUseOverflowState = vi.mocked(useOverflowState);
   const mockUseStreamingContext = vi.mocked(useStreamingContext);
@@ -35,7 +47,9 @@ describe('ShowMoreLines', () => {
       mockUseOverflowState.mockReturnValue({ overflowingIds } as NonNullable<
         ReturnType<typeof useOverflowState>
       >);
-      mockUseStreamingContext.mockReturnValue(streamingState);
+      mockUseStreamingContext.mockReturnValue(
+        makeStreamingContext(streamingState),
+      );
       const { lastFrame, unmount } = await render(
         <ShowMoreLines constrainHeight={constrainHeight} />,
       );
@@ -49,7 +63,9 @@ describe('ShowMoreLines', () => {
     mockUseOverflowState.mockReturnValue({
       overflowingIds: new Set(['1']),
     } as NonNullable<ReturnType<typeof useOverflowState>>);
-    mockUseStreamingContext.mockReturnValue(StreamingState.Idle);
+    mockUseStreamingContext.mockReturnValue(
+      makeStreamingContext(StreamingState.Idle),
+    );
     const { lastFrame, unmount } = await render(
       <ShowMoreLines constrainHeight={true} />,
     );
@@ -70,7 +86,9 @@ describe('ShowMoreLines', () => {
       mockUseOverflowState.mockReturnValue({
         overflowingIds: new Set(['1']),
       } as NonNullable<ReturnType<typeof useOverflowState>>);
-      mockUseStreamingContext.mockReturnValue(streamingState);
+      mockUseStreamingContext.mockReturnValue(
+        makeStreamingContext(streamingState),
+      );
       const { lastFrame, unmount } = await render(
         <ShowMoreLines constrainHeight={true} />,
       );
@@ -86,7 +104,9 @@ describe('ShowMoreLines', () => {
     mockUseOverflowState.mockReturnValue({
       overflowingIds: new Set(),
     } as NonNullable<ReturnType<typeof useOverflowState>>);
-    mockUseStreamingContext.mockReturnValue(StreamingState.Idle);
+    mockUseStreamingContext.mockReturnValue(
+      makeStreamingContext(StreamingState.Idle),
+    );
     const { lastFrame, unmount } = await render(
       <ShowMoreLines constrainHeight={true} isOverflowing={true} />,
     );
@@ -100,7 +120,9 @@ describe('ShowMoreLines', () => {
     mockUseOverflowState.mockReturnValue({
       overflowingIds: new Set(['1']),
     } as NonNullable<ReturnType<typeof useOverflowState>>);
-    mockUseStreamingContext.mockReturnValue(StreamingState.Idle);
+    mockUseStreamingContext.mockReturnValue(
+      makeStreamingContext(StreamingState.Idle),
+    );
     const { lastFrame, unmount } = await render(
       <ShowMoreLines constrainHeight={true} isOverflowing={false} />,
     );
