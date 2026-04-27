@@ -280,6 +280,18 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
     number | null
   >(null);
   const pasteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  /**
+   * Monotonically incrementing version token for clipboard paste operations.
+   * Incremented on every handleClipboardPaste invocation; any in-flight paste
+   * whose captured version no longer matches the current token is superseded
+   * and discards its result without writing to the buffer.
+   */
+  const pasteVersionRef = useRef<number>(0);
+  /**
+   * Tracks whether the InputPrompt component is still mounted. Used to guard
+   * against buffer mutations after unmount when async paste operations complete.
+   */
+  const mountedRef = useRef(true);
   const innerBoxRef = useRef<DOMElement>(null);
   const hasUserNavigatedSuggestions = useRef(false);
   const listRef = useRef<ScrollableListRef<ScrollableItem>>(null);
@@ -374,15 +386,16 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
     }
   }, [showEscapePrompt, onEscapePromptChange]);
 
-  // Clear paste timeout on unmount
-  useEffect(
-    () => () => {
+  // Clear paste timeout on unmount and mark component as unmounted.
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
       if (pasteTimeoutRef.current) {
         clearTimeout(pasteTimeoutRef.current);
       }
-    },
-    [],
-  );
+    };
+  }, []);
 
   const handleSubmitAndClear = useCallback(
     (submittedValue: string) => {
@@ -514,45 +527,107 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
     if (shortcutsHelpVisible) {
       setShortcutsHelpVisible(false);
     }
+
+    // Increment version token. Any in-flight paste invocation whose captured
+    // token no longer matches pasteVersionRef.current is superseded and must
+    // discard its result without writing to the buffer. This prevents races
+    // when Ctrl+V is pressed multiple times in quick succession and ensures
+    // only the most recent clipboard content is inserted.
+    pasteVersionRef.current += 1;
+    const myVersion = pasteVersionRef.current;
+
+    // Returns true iff this paste invocation is still the current one and
+    // the component is still mounted.
+    const isCurrentPaste = () =>
+      mountedRef.current && pasteVersionRef.current === myVersion;
+
     try {
-      if (await clipboardHasImage()) {
-        const imagePath = await saveClipboardImage(config.getTargetDir());
+      // clipboardHasImage() is async (may invoke osascript / powershell / wl-paste).
+      // We check the version token immediately after it resolves.
+      const hasImage = await clipboardHasImage();
+
+      if (!isCurrentPaste()) return;
+
+      if (hasImage) {
+        // --- Image paste path ---
+        // Phase 1 (sync-like): Insert a placeholder immediately so the user
+        // has visual feedback while the image is being saved to disk.
+        const PLACEHOLDER = '@<pasting-image…> ';
+        const currentText = buffer.text;
+        const offset = buffer.getOffset();
+
+        // Add a leading space if needed
+        let placeholderToInsert = PLACEHOLDER;
+        const charBefore = offset > 0 ? currentText[offset - 1] : '';
+        if (charBefore && charBefore !== ' ' && charBefore !== '\n') {
+          placeholderToInsert = ' ' + placeholderToInsert;
+        }
+
+        buffer.replaceRangeByOffset(offset, offset, placeholderToInsert);
+        const placeholderStart = offset;
+        const placeholderEnd = offset + placeholderToInsert.length;
+
+        // Yield one microtask tick to let the Ink renderer update with the
+        // placeholder before we start the expensive image-save work.
+        await Promise.resolve();
+
+        if (!isCurrentPaste()) {
+          // A newer paste superseded us — remove the placeholder we inserted.
+          buffer.replaceRangeByOffset(placeholderStart, placeholderEnd, '');
+          return;
+        }
+
+        // Phase 2 (async, off the keystroke path): Save the clipboard image.
+        let imagePath: string | null = null;
+        try {
+          imagePath = await saveClipboardImage(config.getTargetDir());
+        } catch {
+          // saveClipboardImage failed; imagePath stays null
+        }
+
+        if (!isCurrentPaste()) {
+          // Superseded while saving — remove placeholder.
+          buffer.replaceRangeByOffset(placeholderStart, placeholderEnd, '');
+          return;
+        }
+
         if (imagePath) {
-          // Clean up old images
+          // Clean up old images (fire-and-forget)
           cleanupOldClipboardImages(config.getTargetDir()).catch(() => {
             // Ignore cleanup errors
           });
 
-          // Get relative path from current directory
+          // Build the final insert text and replace the placeholder.
           const relativePath = path.relative(config.getTargetDir(), imagePath);
-
-          // Insert @path reference at cursor position
-          const insertText = `@${relativePath}`;
-          const currentText = buffer.text;
-          const offset = buffer.getOffset();
-
-          // Add spaces around the path if needed
-          let textToInsert = insertText;
-          const charBefore = offset > 0 ? currentText[offset - 1] : '';
-          const charAfter =
-            offset < currentText.length ? currentText[offset] : '';
-
-          if (charBefore && charBefore !== ' ' && charBefore !== '\n') {
-            textToInsert = ' ' + textToInsert;
+          let insertText = `@${relativePath}`;
+          const textAfterPlaceholder = buffer.text[placeholderEnd] ?? '';
+          if (
+            !textAfterPlaceholder ||
+            (textAfterPlaceholder !== ' ' && textAfterPlaceholder !== '\n')
+          ) {
+            insertText = insertText + ' ';
           }
-          if (!charAfter || (charAfter !== ' ' && charAfter !== '\n')) {
-            textToInsert = textToInsert + ' ';
-          }
-
-          // Insert at cursor position
-          buffer.replaceRangeByOffset(offset, offset, textToInsert);
+          buffer.replaceRangeByOffset(
+            placeholderStart,
+            placeholderEnd,
+            insertText,
+          );
+        } else {
+          // Image save failed — remove the placeholder.
+          buffer.replaceRangeByOffset(placeholderStart, placeholderEnd, '');
         }
+        return; // Do not fall through to the text-paste path.
       }
 
+      // --- Text paste path ---
       if (settings.experimental?.useOSC52Paste) {
         stdout.write('\x1b]52;c;?\x07');
       } else {
         const textToInsert = await clipboardy.read();
+
+        // Guard after async clipboardy.read() resolves.
+        if (!isCurrentPaste()) return;
+
         const escapedText = settings.ui?.escapePastedAtSymbols
           ? escapeAtSymbols(textToInsert)
           : textToInsert;
@@ -575,6 +650,9 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
     settings,
     shortcutsHelpVisible,
     setShortcutsHelpVisible,
+    // pasteVersionRef and mountedRef are refs; they do not need to be in the
+    // dependency array because their .current values are read inside the
+    // async callback at call time, not captured at creation time.
   ]);
 
   useMouseClick(
