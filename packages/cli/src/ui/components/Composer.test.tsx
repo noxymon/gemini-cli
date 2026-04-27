@@ -11,6 +11,10 @@ import { Box, Text } from 'ink';
 import { Composer } from './Composer.js';
 import { UIStateContext, type UIState } from '../contexts/UIStateContext.js';
 import {
+  StreamingContext,
+  type StreamingContextValue,
+} from '../contexts/StreamingContext.js';
+import {
   UIActionsContext,
   type UIActions,
 } from '../contexts/UIActionsContext.js';
@@ -278,9 +282,24 @@ const renderComposer = async (
         <QuotaContext.Provider value={quotaState}>
           <InputContext.Provider value={inputState}>
             <UIStateContext.Provider value={uiState}>
-              <UIActionsContext.Provider value={uiActions}>
-                <Composer isFocused={true} />
-              </UIActionsContext.Provider>
+              <StreamingContext.Provider
+                value={
+                  {
+                    streamingState: uiState.streamingState,
+                    pendingHistoryItems: uiState.pendingHistoryItems ?? [],
+                    thought: uiState.thought ?? null,
+                    elapsedTime: uiState.elapsedTime ?? 0,
+                    currentLoadingPhrase: uiState.currentLoadingPhrase,
+                    currentTip: uiState.currentTip,
+                    currentWittyPhrase: uiState.currentWittyPhrase,
+                    activeHooks: uiState.activeHooks ?? [],
+                  } satisfies StreamingContextValue
+                }
+              >
+                <UIActionsContext.Provider value={uiActions}>
+                  <Composer isFocused={true} />
+                </UIActionsContext.Provider>
+              </StreamingContext.Provider>
             </UIStateContext.Provider>
           </InputContext.Provider>
         </QuotaContext.Provider>
