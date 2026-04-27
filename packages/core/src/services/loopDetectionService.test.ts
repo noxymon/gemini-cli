@@ -248,6 +248,56 @@ describe('LoopDetectionService', () => {
       }
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
+
+    // --- Thinking-tool loop detection (incl. MCP-prefixed names) ---
+    // Regression: a BeforeAgent hook that injects a persistent "always use
+    // sequential-thinking" instruction can drive the model to call
+    // sequential-thinking on every turn. The MCP-discovered name is prefixed
+    // (`mcp_<server>_<tool>`), so an exact-name match misses it and the
+    // detector falls back to the much higher 50-call threshold.
+    it('should detect a thinking-tool loop at 15 calls for the bare tool name', () => {
+      const THINKING_THRESHOLD = 15;
+      for (let i = 0; i < THINKING_THRESHOLD - 1; i++) {
+        const event = createToolCallRequestEvent('sequentialthinking', {
+          thoughtNumber: i,
+          thought: `step ${i}`,
+          nextThoughtNeeded: true,
+        });
+        expect(service.addAndCheck(event).count).toBe(0);
+      }
+      const result = service.addAndCheck(
+        createToolCallRequestEvent('sequentialthinking', {
+          thoughtNumber: THINKING_THRESHOLD,
+          thought: 'final',
+          nextThoughtNeeded: true,
+        }),
+      );
+      expect(result.count).toBe(1);
+    });
+
+    it('should detect a thinking-tool loop at 15 calls for the MCP-prefixed name', () => {
+      // This is the actual name the LLM sees once `generateValidName`
+      // has prefixed `mcp_` and replaced hyphens.
+      const THINKING_THRESHOLD = 15;
+      const mcpName = 'mcp_sequential_thinking_sequentialthinking';
+      for (let i = 0; i < THINKING_THRESHOLD - 1; i++) {
+        const event = createToolCallRequestEvent(mcpName, {
+          thoughtNumber: i,
+          thought: `step ${i}`,
+          nextThoughtNeeded: true,
+        });
+        expect(service.addAndCheck(event).count).toBe(0);
+      }
+      const result = service.addAndCheck(
+        createToolCallRequestEvent(mcpName, {
+          thoughtNumber: THINKING_THRESHOLD,
+          thought: 'final',
+          nextThoughtNeeded: true,
+        }),
+      );
+      expect(result.count).toBe(1);
+      expect(result.type).toBe(LoopType.CONSECUTIVE_IDENTICAL_TOOL_CALLS);
+    });
   });
 
   describe('Content Loop Detection', () => {

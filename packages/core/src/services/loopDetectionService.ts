@@ -51,6 +51,25 @@ const THINKING_TOOL_NAMES = new Set([
 ]);
 
 /**
+ * Returns true if `name` is a known thinking tool, including when it has
+ * been prefixed by MCP discovery (`mcp_<server>_<tool>`). Without this,
+ * a BeforeAgent hook that steers the model to a sequential-thinking MCP
+ * tool can drive ~50 consecutive calls before the higher fallback
+ * threshold trips — effectively a hang.
+ */
+function isThinkingToolName(name: string): boolean {
+  if (THINKING_TOOL_NAMES.has(name)) {
+    return true;
+  }
+  for (const thinkingName of THINKING_TOOL_NAMES) {
+    if (name.endsWith(`_${thinkingName}`)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * The number of recent conversation turns to include in the history when asking the LLM to check for a loop.
  */
 const LLM_LOOP_CHECK_HISTORY_COUNT = 20;
@@ -356,7 +375,7 @@ export class LoopDetectionService {
       return true;
     }
 
-    const threshold = THINKING_TOOL_NAMES.has(toolCall.name)
+    const threshold = isThinkingToolName(toolCall.name)
       ? THINKING_TOOL_LOOP_THRESHOLD
       : CONSECUTIVE_SAME_TOOL_NAME_THRESHOLD;
 
