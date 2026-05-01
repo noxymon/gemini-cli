@@ -892,6 +892,9 @@ export class GeminiChat {
     let hasThoughts = false;
     let finishReason: FinishReason | undefined;
 
+    // The SDK provides fully assembled FunctionCall objects in chunk.functionCalls
+    const finalFunctionCalls: FunctionCall[] = [];
+
     let watchdogTimer: NodeJS.Timeout | undefined;
     const resetWatchdog = () => {
       if (!this.context.config.getEnableStreamWatchdog?.()) {
@@ -914,6 +917,10 @@ export class GeminiChat {
         if (candidateWithReason) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
           finishReason = candidateWithReason.finishReason as FinishReason;
+        }
+
+        if (chunk.functionCalls && chunk.functionCalls.length > 0) {
+          finalFunctionCalls.push(...chunk.functionCalls);
         }
 
         if (isValidResponse(chunk)) {

@@ -747,7 +747,7 @@ export class ShellExecutionService {
               if (ShellExecutionService.backgroundLogPids.has(child.pid)) {
                 ShellExecutionService.syncBackgroundLog(
                   child.pid,
-                  strippedChunk,
+                  decodedChunk,
                 );
               }
             }
@@ -858,7 +858,7 @@ export class ShellExecutionService {
         if (stdoutDecoder) {
           const remaining = stdoutDecoder.decode();
           if (remaining) {
-            this.appendChunkAndTruncate(
+            ShellExecutionService.appendChunkAndTruncate(
               state.outputChunks,
               state.outputLength,
               remaining,
@@ -879,7 +879,7 @@ export class ShellExecutionService {
         if (stderrDecoder) {
           const remaining = stderrDecoder.decode();
           if (remaining) {
-            this.appendChunkAndTruncate(
+            ShellExecutionService.appendChunkAndTruncate(
               state.outputChunks,
               state.outputLength,
               remaining,
