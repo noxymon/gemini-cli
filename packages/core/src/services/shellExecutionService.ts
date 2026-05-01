@@ -47,7 +47,7 @@ import {
 } from './executionLifecycleService.js';
 const { Terminal } = pkg;
 
-const MAX_CHILD_PROCESS_BUFFER_SIZE = 16 * 1024 * 1024; // 16MB
+export const MAX_CHILD_PROCESS_BUFFER_SIZE = 16 * 1024 * 1024; // 16MB
 
 /**
  * An environment variable that is set for shell executions. This can be used
@@ -747,7 +747,7 @@ export class ShellExecutionService {
               if (ShellExecutionService.backgroundLogPids.has(child.pid)) {
                 ShellExecutionService.syncBackgroundLog(
                   child.pid,
-                  decodedChunk,
+                  strippedChunk,
                 );
               }
             }
@@ -780,7 +780,7 @@ export class ShellExecutionService {
           combinedOutput += truncationMessage;
         }
 
-        const finalStrippedOutput = stripAnsi(combinedOutput).trim();
+        const finalStrippedOutput = combinedOutput.trim();
         const exitCode = code;
         const exitSignal =
           signal && os.constants.signals
@@ -1143,11 +1143,7 @@ export class ShellExecutionService {
 
         if (!shellExecutionConfig.disableDynamicLineTrimming) {
           if (!hasStartedOutput) {
-            const bufferText = getFullBufferText(headlessTerminal);
-            if (bufferText.trim().length === 0) {
-              return;
-            }
-            hasStartedOutput = true;
+            return;
           }
         }
 
@@ -1286,6 +1282,9 @@ export class ShellExecutionService {
 
                 isWriting = true;
                 headlessTerminal.write(decodedChunk, () => {
+                  if (!hasStartedOutput) {
+                    hasStartedOutput = true;
+                  }
                   render();
                   isWriting = false;
                   resolveChunk();

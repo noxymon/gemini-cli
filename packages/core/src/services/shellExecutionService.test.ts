@@ -19,6 +19,7 @@ import type { Readable } from 'node:stream';
 import { type ChildProcess } from 'node:child_process';
 import {
   ShellExecutionService,
+  MAX_CHILD_PROCESS_BUFFER_SIZE,
   type ShellOutputEvent,
   type ShellExecutionConfig,
 } from './shellExecutionService.js';

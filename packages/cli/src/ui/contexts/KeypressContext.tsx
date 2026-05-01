@@ -470,6 +470,7 @@ function createDataListener(keypressHandler: KeypressHandler) {
   };
 }
 
+
 /**
  * Translates raw keypress characters into key events.
  * Buffers escape sequences until a full sequence is received or
