@@ -272,6 +272,38 @@ export class TerminalCapabilityManager {
     return this.kittyEnabled;
   }
 
+  /**
+   * Temporarily disables the Kitty keyboard protocol while an embedded PTY
+   * (nested ConPTY via node-pty) is active. On Windows Terminal, Kitty +
+   * nested ConPTY interaction can cause the terminal to send unexpected escape
+   * sequences (including \x1b[24~ / F12) that corrupt the app's key handling.
+   * Reverting to legacy VT mode eliminates the interaction.
+   */
+  disableKittyForEmbeddedPty(): void {
+    if (!this.kittyEnabled) return;
+    try {
+      debugLogger.log('Disabling Kitty keyboard protocol for embedded PTY');
+      disableKittyKeyboardProtocol();
+      this.kittyEnabled = false;
+    } catch (e) {
+      debugLogger.warn('Failed to disable Kitty for embedded PTY:', e);
+    }
+  }
+
+  /**
+   * Re-enables the Kitty keyboard protocol after the embedded PTY exits.
+   */
+  reenableKittyAfterEmbeddedPty(): void {
+    if (!this.kittySupported || this.kittyEnabled) return;
+    try {
+      debugLogger.log('Re-enabling Kitty keyboard protocol after embedded PTY');
+      enableKittyKeyboardProtocol();
+      this.kittyEnabled = true;
+    } catch (e) {
+      debugLogger.warn('Failed to re-enable Kitty after embedded PTY:', e);
+    }
+  }
+
   isGhosttyTerminal(env: NodeJS.ProcessEnv = process.env): boolean {
     const termProgram = env['TERM_PROGRAM']?.toLowerCase();
     const term = env['TERM']?.toLowerCase();

@@ -1284,6 +1284,20 @@ Logging in with Google... Restarting Gemini CLI to continue.
     lastOutputTimeRef.current = lastOutputTime;
   }, [lastOutputTime]);
 
+  // On Windows Terminal, Kitty keyboard protocol combined with a nested ConPTY
+  // (from @lydell/node-pty for the embedded bash) causes Windows Terminal to
+  // emit unexpected escape sequences on stdin — including \x1b[24~ (F12) —
+  // when the user performs scroll or other actions after exiting shell focus.
+  // Disabling Kitty while any embedded PTY is alive and re-enabling once it
+  // exits eliminates the interaction entirely.
+  useEffect(() => {
+    if (activePtyId !== null) {
+      terminalCapabilityManager.disableKittyForEmbeddedPty();
+    } else {
+      terminalCapabilityManager.reenableKittyAfterEmbeddedPty();
+    }
+  }, [activePtyId]);
+
   const { shouldShowFocusHint, inactivityStatus } = useShellInactivityStatus({
     activePtyId,
     lastOutputTime,
