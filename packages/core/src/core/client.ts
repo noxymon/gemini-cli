@@ -143,6 +143,9 @@ export class GeminiClient {
 
   // Hook state to deduplicate BeforeAgent calls and track response for
   // AfterAgent
+  private static readonly MAX_HOOK_STATE_ENTRIES = 50;
+  private static readonly HOOK_STATE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
   private hookStateMap = new Map<
     string,
     {
@@ -150,8 +153,32 @@ export class GeminiClient {
       cumulativeResponse: string;
       activeCalls: number;
       originalRequest: PartListUnion;
+      createdAt: number;
     }
   >();
+
+  private pruneHookStates(): void {
+    const now = Date.now();
+    for (const [key, state] of this.hookStateMap) {
+      if (
+        state.activeCalls <= 0 &&
+        now - state.createdAt > GeminiClient.HOOK_STATE_TTL_MS
+      ) {
+        this.hookStateMap.delete(key);
+      }
+    }
+    // Hard cap: if still over limit, evict oldest entries first.
+    if (this.hookStateMap.size >= GeminiClient.MAX_HOOK_STATE_ENTRIES) {
+      const overCount =
+        this.hookStateMap.size - GeminiClient.MAX_HOOK_STATE_ENTRIES + 1;
+      let removed = 0;
+      for (const key of this.hookStateMap.keys()) {
+        if (removed >= overCount) break;
+        this.hookStateMap.delete(key);
+        removed++;
+      }
+    }
+  }
 
   private async fireBeforeAgentHookSafe(
     request: PartListUnion,
@@ -159,11 +186,13 @@ export class GeminiClient {
   ): Promise<BeforeAgentHookReturn> {
     let hookState = this.hookStateMap.get(prompt_id);
     if (!hookState) {
+      this.pruneHookStates();
       hookState = {
         hasFiredBeforeAgent: false,
         cumulativeResponse: '',
         activeCalls: 0,
         originalRequest: request,
+        createdAt: Date.now(),
       };
       this.hookStateMap.set(prompt_id, hookState);
     }
