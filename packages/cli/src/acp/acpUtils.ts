@@ -15,6 +15,8 @@ import {
   DEFAULT_GEMINI_MODEL,
   DEFAULT_GEMINI_FLASH_MODEL,
   DEFAULT_GEMINI_FLASH_LITE_MODEL,
+  GEMMA_4_31B_IT_MODEL,
+  GEMMA_4_26B_A4B_IT_MODEL,
   PREVIEW_GEMINI_3_1_MODEL,
   PREVIEW_GEMINI_MODEL,
   PREVIEW_GEMINI_3_1_CUSTOM_TOOLS_MODEL,
@@ -321,6 +323,14 @@ export function buildAvailableModels(
     {
       value: DEFAULT_GEMINI_FLASH_LITE_MODEL,
       title: getDisplayString(DEFAULT_GEMINI_FLASH_LITE_MODEL),
+    },
+    {
+      value: GEMMA_4_31B_IT_MODEL,
+      title: getDisplayString(GEMMA_4_31B_IT_MODEL),
+    },
+    {
+      value: GEMMA_4_26B_A4B_IT_MODEL,
+      title: getDisplayString(GEMMA_4_26B_A4B_IT_MODEL),
     },
   ];
 
