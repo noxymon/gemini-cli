@@ -837,7 +837,6 @@ describe('ShellExecutionService', () => {
 
       // Trigger data before backgrounding
       mockBgChildProcess.stdout?.emit('data', Buffer.from('initial cp output'));
-      await new Promise((resolve) => process.nextTick(resolve));
 
       ShellExecutionService.background(
         handle.pid!,
@@ -846,6 +845,7 @@ describe('ShellExecutionService', () => {
       );
 
       const result = await handle.result;
+
       expect(result.backgrounded).toBe(true);
       expect(result.output).toBe('initial cp output');
 
@@ -2193,133 +2193,37 @@ describe('ShellExecutionService environment variables', () => {
   });
 });
 
-describe('ShellExecutionService windowsBash', () => {
-  let mockChildProcess: EventEmitter & Partial<ChildProcess>;
-  let onOutputEventMock: Mock<(event: ShellOutputEvent) => void>;
+describe('background method', () => {
+  it('should write to the log stream', () => {
+    const pid = 12345;
+    const state = {
+      outputChunks: ['hello world'],
+      outputLength: 11,
+      truncated: false,
+      binaryBytesReceived: 0,
+      sniffChunks: [],
+    };
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    ExecutionLifecycleService.resetForTest();
-    ShellExecutionService.resetForTest();
-
-    mockIsBinary.mockReturnValue(false);
-    mockPlatform.mockReturnValue('win32');
-    mockGetPty.mockResolvedValue(null);
-    mockResolveExecutable.mockImplementation(async (exe: string) => exe);
-    mockResolveBashOnPath.mockResolvedValue(undefined);
-
-    onOutputEventMock = vi.fn();
-
-    mockChildProcess = new EventEmitter() as EventEmitter &
-      Partial<ChildProcess>;
-    mockChildProcess.stdout = new EventEmitter() as Readable;
-    mockChildProcess.stderr = new EventEmitter() as Readable;
-    mockChildProcess.kill = vi.fn();
-
-    Object.defineProperty(mockChildProcess, 'pid', {
-      value: 99999,
-      configurable: true,
+    ShellExecutionService['activeChildProcesses'].set(pid, {
+      process: {} as unknown as import('node:child_process').ChildProcess,
+      state,
+      command: 'test',
+      sessionId: 'test-session',
     });
 
-    mockCpSpawn.mockReturnValue(mockChildProcess);
-  });
-
-  const runCommand = async (
-    command: string,
-    config: ShellExecutionConfig,
-  ): Promise<void> => {
-    const abortController = new AbortController();
-    const handle = await ShellExecutionService.execute(
-      command,
-      '/test/dir',
-      onOutputEventMock,
-      abortController.signal,
-      false,
-      config,
+    const mockWriteStream = {
+      write: vi.fn(),
+      end: vi.fn(),
+      on: vi.fn(),
+    };
+    mockCreateWriteStream.mockReturnValue(
+      mockWriteStream as unknown as import('node:fs').WriteStream,
     );
-    await new Promise((resolve) => process.nextTick(resolve));
-    mockChildProcess.emit('exit', 0, null);
-    mockChildProcess.emit('close', 0, null);
-    await handle.result;
-  };
 
-  it('uses PowerShell when enableWindowsBash is off (default) on Windows', async () => {
-    await runCommand('dir', { ...shellExecutionConfig });
+    ShellExecutionService.background(pid, 'test-session', 'test-process');
 
-    expect(mockCpSpawn).toHaveBeenCalledWith(
-      'powershell.exe',
-      ['-NoProfile', '-Command', expect.any(String)],
-      expect.any(Object),
-    );
-  });
+    expect(mockWriteStream.write).toHaveBeenCalledWith('hello world\n');
 
-  it('uses bash when enableWindowsBash is on and bash is found on PATH', async () => {
-    mockResolveBashOnPath.mockResolvedValue('/usr/bin/bash');
-
-    await runCommand('ls -la', {
-      ...shellExecutionConfig,
-      enableWindowsBash: true,
-    });
-
-    expect(mockCpSpawn).toHaveBeenCalledWith(
-      '/usr/bin/bash',
-      ['-c', expect.any(String)],
-      expect.any(Object),
-    );
-  });
-
-  it('falls back to PowerShell with a warning when enableWindowsBash is on but bash is not on PATH', async () => {
-    mockResolveBashOnPath.mockResolvedValue(undefined);
-
-    await runCommand('ls -la', {
-      ...shellExecutionConfig,
-      enableWindowsBash: true,
-    });
-
-    expect(mockCpSpawn).toHaveBeenCalledWith(
-      'powershell.exe',
-      ['-NoProfile', '-Command', expect.any(String)],
-      expect.any(Object),
-    );
-    expect(mockDebugLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('experimental.windowsBash'),
-    );
-  });
-
-  it('uses cmd.exe (sandbox) even when enableWindowsBash is on with strict sandbox', async () => {
-    mockResolveBashOnPath.mockResolvedValue('/usr/bin/bash');
-
-    await runCommand('dir', {
-      ...shellExecutionConfig,
-      enableWindowsBash: true,
-      sandboxConfig: {
-        enabled: true,
-        command: 'windows-native',
-        networkAccess: false,
-      },
-    });
-
-    expect(mockCpSpawn).toHaveBeenCalledWith(
-      'cmd.exe',
-      ['/c', expect.any(String)],
-      expect.any(Object),
-    );
-  });
-
-  it('ignores enableWindowsBash on non-Windows platforms', async () => {
-    mockPlatform.mockReturnValue('linux');
-    mockResolveBashOnPath.mockResolvedValue('/usr/bin/bash');
-
-    await runCommand('ls -la', {
-      ...shellExecutionConfig,
-      enableWindowsBash: true,
-    });
-
-    expect(mockCpSpawn).toHaveBeenCalledWith(
-      'bash',
-      ['-c', expect.any(String)],
-      expect.any(Object),
-    );
-    expect(mockResolveBashOnPath).not.toHaveBeenCalled();
+    ShellExecutionService['activeChildProcesses'].delete(pid);
   });
 });

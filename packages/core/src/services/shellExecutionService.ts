@@ -858,7 +858,7 @@ export class ShellExecutionService {
         if (stdoutDecoder) {
           const remaining = stdoutDecoder.decode();
           if (remaining) {
-            ShellExecutionService.appendChunkAndTruncate(
+            this.appendChunkAndTruncate(
               state.outputChunks,
               state.outputLength,
               remaining,
@@ -879,7 +879,7 @@ export class ShellExecutionService {
         if (stderrDecoder) {
           const remaining = stderrDecoder.decode();
           if (remaining) {
-            ShellExecutionService.appendChunkAndTruncate(
+            this.appendChunkAndTruncate(
               state.outputChunks,
               state.outputLength,
               remaining,
@@ -1350,6 +1350,7 @@ export class ShellExecutionService {
               startLine,
               endLine,
             );
+
             let finalOutput = '';
             const entry = ShellExecutionService.activePtys.get(ptyPid);
             if (entry) {
@@ -1568,7 +1569,6 @@ export class ShellExecutionService {
         );
         this.backgroundLogSizes.set(pid, bytesWritten);
       } else if (activeChild) {
-        stream.write('DEBUG: In activeChild branch');
         const output = activeChild.state.outputChunks.join('');
         if (output) {
           const stripped = stripAnsi(output) + '\n';
