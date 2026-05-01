@@ -173,7 +173,7 @@ mkdirSync(distDir, { recursive: true });
 console.log('Running npm clean, install, and bundle...');
 try {
   runCommand('npm', ['run', 'clean']);
-  runCommand('npm', ['install']);
+  runCommand('npm', ['install', '--ignore-scripts']);
   runCommand('npm', ['run', 'bundle']);
 } catch (e) {
   console.error('Build step failed:', e.message);
@@ -261,8 +261,8 @@ const manifest = {
   files: [],
 };
 
-// Add all javascript chunks from the bundle directory
-const jsFiles = globSync('*.js', { cwd: bundleDir });
+// Add all javascript files from the bundle directory (including chunks/ subdir)
+const jsFiles = globSync('**/*.js', { cwd: bundleDir });
 for (const jsFile of jsFiles) {
   const fsPath = join(bundleDir, jsFile);
   const content = readFileSync(fsPath);
@@ -273,7 +273,7 @@ for (const jsFile of jsFiles) {
     assets['gemini.mjs'] = fsPath;
     manifest.mainHash = hash;
   } else {
-    // Other chunks need to be mapped exactly as they are named so dynamic imports find them
+    // Preserve relative path so dynamic imports resolve correctly (e.g. chunks/chunk-HASH.js)
     assets[jsFile] = fsPath;
     manifest.files.push({ key: jsFile, path: jsFile, hash: hash });
   }
