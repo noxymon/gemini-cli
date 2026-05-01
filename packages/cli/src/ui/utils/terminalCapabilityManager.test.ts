@@ -9,6 +9,7 @@ import { TerminalCapabilityManager } from './terminalCapabilityManager.js';
 import { EventEmitter } from 'node:events';
 import {
   enableKittyKeyboardProtocol,
+  disableKittyKeyboardProtocol,
   enableModifyOtherKeys,
 } from '@google/gemini-cli-core';
 import * as fs from 'node:fs';
@@ -482,6 +483,84 @@ describe('TerminalCapabilityManager', () => {
 
     it('returns false otherwise', () => {
       expect(manager.isWindowsTerminal({})).toBe(false);
+    });
+  });
+
+  describe('disableKittyForEmbeddedPty', () => {
+    it('disables Kitty and updates state when Kitty is enabled', async () => {
+      const manager = TerminalCapabilityManager.getInstance();
+      const promise = manager.detectCapabilities();
+      stdin.emit('data', Buffer.from('\x1b[?1u'));
+      stdin.emit('data', Buffer.from('\x1b[?62c'));
+      await promise;
+      manager.enableSupportedModes();
+      expect(manager.isKittyProtocolEnabled()).toBe(true);
+
+      vi.resetAllMocks();
+      manager.disableKittyForEmbeddedPty();
+
+      expect(disableKittyKeyboardProtocol).toHaveBeenCalledOnce();
+      expect(manager.isKittyProtocolEnabled()).toBe(false);
+    });
+
+    it('does nothing when Kitty is already disabled', async () => {
+      const manager = TerminalCapabilityManager.getInstance();
+      const promise = manager.detectCapabilities();
+      stdin.emit('data', Buffer.from('\x1b[?62c'));
+      await promise;
+      manager.enableSupportedModes();
+      expect(manager.isKittyProtocolEnabled()).toBe(false);
+
+      manager.disableKittyForEmbeddedPty();
+
+      expect(disableKittyKeyboardProtocol).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reenableKittyAfterEmbeddedPty', () => {
+    it('re-enables Kitty when it is supported but disabled', async () => {
+      const manager = TerminalCapabilityManager.getInstance();
+      const promise = manager.detectCapabilities();
+      stdin.emit('data', Buffer.from('\x1b[?1u'));
+      stdin.emit('data', Buffer.from('\x1b[?62c'));
+      await promise;
+      manager.enableSupportedModes();
+      manager.disableKittyForEmbeddedPty();
+      expect(manager.isKittyProtocolEnabled()).toBe(false);
+
+      vi.resetAllMocks();
+      manager.reenableKittyAfterEmbeddedPty();
+
+      expect(enableKittyKeyboardProtocol).toHaveBeenCalledOnce();
+      expect(manager.isKittyProtocolEnabled()).toBe(true);
+    });
+
+    it('does nothing when Kitty is not supported', async () => {
+      const manager = TerminalCapabilityManager.getInstance();
+      const promise = manager.detectCapabilities();
+      stdin.emit('data', Buffer.from('\x1b[?62c'));
+      await promise;
+      manager.enableSupportedModes();
+      expect(manager.isKittyProtocolEnabled()).toBe(false);
+
+      manager.reenableKittyAfterEmbeddedPty();
+
+      expect(enableKittyKeyboardProtocol).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when Kitty is already enabled', async () => {
+      const manager = TerminalCapabilityManager.getInstance();
+      const promise = manager.detectCapabilities();
+      stdin.emit('data', Buffer.from('\x1b[?1u'));
+      stdin.emit('data', Buffer.from('\x1b[?62c'));
+      await promise;
+      manager.enableSupportedModes();
+      expect(manager.isKittyProtocolEnabled()).toBe(true);
+
+      vi.resetAllMocks();
+      manager.reenableKittyAfterEmbeddedPty();
+
+      expect(enableKittyKeyboardProtocol).not.toHaveBeenCalled();
     });
   });
 });
