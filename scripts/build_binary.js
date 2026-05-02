@@ -333,7 +333,7 @@ if (existsSync(policyDir)) {
   const policyFiles = globSync('*.toml', { cwd: policyDir });
   for (const policyFile of policyFiles) {
     const fsPath = join(policyDir, policyFile);
-    const relativePath = join('policies', policyFile);
+    const relativePath = join('chunks', 'policies', policyFile);
     const content = readFileSync(fsPath);
     const hash = sha256(content);
     // Use a unique key to avoid collision if filenames overlap (though unlikely here)
