@@ -356,6 +356,12 @@ function bufferPaste(keypressHandler: KeypressHandler): KeypressHandler {
  * Buffers escape sequences until a full sequence is received or
  * until a timeout occurs.
  */
+// Below this batch size, printable characters are fed through the parser one
+// at a time so they produce individual keypress events. At or above it, we
+// emit a single 'paste' event to bypass per-character React re-renders, which
+// is the actual UI hang case (large clipboard pastes).
+const PASTE_BATCH_THRESHOLD = 32;
+
 function createDataListener(keypressHandler: KeypressHandler) {
   // Track whether we are inside a bracketed-paste region so the fast batch
   // path is only activated for actual paste content (never for regular
@@ -433,7 +439,7 @@ function createDataListener(keypressHandler: KeypressHandler) {
             batch += data[i];
             i++;
           }
-          if (batch.length > 1) {
+          if (batch.length >= PASTE_BATCH_THRESHOLD) {
             // Bypass the generator: parserIsNeutral is unchanged (true).
             keypressHandler({
               name: 'paste',
@@ -444,8 +450,13 @@ function createDataListener(keypressHandler: KeypressHandler) {
               insertable: true,
               sequence: batch,
             });
-          } else if (batch.length === 1) {
-            feedToParser(batch);
+          } else {
+            // Below threshold: feed each character to the parser so it produces
+            // individual keypress events (preserves keypress semantics for
+            // typing and short inputs).
+            for (const char of batch) {
+              feedToParser(char);
+            }
           }
         }
       }
@@ -469,7 +480,6 @@ function createDataListener(keypressHandler: KeypressHandler) {
     }
   };
 }
-
 
 /**
  * Translates raw keypress characters into key events.
