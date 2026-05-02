@@ -37,6 +37,7 @@ import {
 } from '../tools/tool-names.js';
 import type { HierarchicalMemory } from '../config/memory.js';
 import { DEFAULT_CONTEXT_FILENAME } from '../tools/memoryTool.js';
+import type { ApprovalMode } from '../policy/types.js';
 
 // --- Options Structs ---
 
@@ -57,6 +58,7 @@ export interface SystemPromptOptions {
 
 export interface PreambleOptions {
   interactive: boolean;
+  approvalMode: ApprovalMode;
 }
 
 export interface CoreMandatesOptions {
@@ -189,9 +191,17 @@ ${renderUserMemory(userMemory, contextFilenames)}
 
 export function renderPreamble(options?: PreambleOptions): string {
   if (!options) return '';
-  return options.interactive
-    ? 'You are Gemini CLI, an interactive CLI agent specializing in software engineering tasks. Your primary goal is to help users safely and effectively.'
-    : 'You are Gemini CLI, an autonomous CLI agent specializing in software engineering tasks. Your primary goal is to help users safely and effectively.';
+
+  let modeStr = 'Default';
+  if (options.approvalMode === 'plan') modeStr = 'Plan';
+  if (options.approvalMode === 'yolo') modeStr = 'YOLO';
+  if (options.approvalMode === 'autoEdit') modeStr = 'Auto-Edit';
+
+  const base = options.interactive
+    ? 'You are Gemini CLI, an interactive CLI agent specializing in software engineering tasks.'
+    : 'You are Gemini CLI, an autonomous CLI agent specializing in software engineering tasks.';
+
+  return `${base} You are currently operating in **${modeStr}** mode. Your primary goal is to help users safely and effectively.`;
 }
 
 export function renderCoreMandates(options?: CoreMandatesOptions): string {
@@ -503,10 +513,11 @@ export function renderGitRepo(options?: GitRepoOptions): string {
   - "Commit the change" -> add changed files and commit.
   - "Wrap up this PR for me" -> do not commit.
 - When asked to commit changes or prepare a commit, always start by gathering information using shell commands:
-  - \`git status\` to ensure that all relevant files are tracked and staged, using \`git add ...\` as needed.
+  - \`git status\` to ensure that all relevant files are tracked and staged, using \`git add <file>...\` for specific files as needed.
   - \`git diff HEAD\` to review all changes (including unstaged changes) to tracked files in work tree since last commit.
     - \`git diff --staged\` to review only staged changes when a partial commit makes sense or was requested by the user.
   - \`git log -n 3\` to review recent commit messages and match their style (verbosity, formatting, signature line, etc.)
+- Do not use \`git add .\` or \`git add -A\` unprompted as this can stage unwanted or untracked files. Instead, stage only the specific files that were changed or created as part of the task.
 - Combine shell commands whenever possible to save time/steps, e.g. \`git status && git diff HEAD && git log -n 3\`.
 - Always propose a draft commit message. Never just ask the user to give you the full commit message.
 - Prefer commit messages that are clear, concise, and focused more on "why" and less on "what".${gitRepoKeepUserInformed(options.interactive)}

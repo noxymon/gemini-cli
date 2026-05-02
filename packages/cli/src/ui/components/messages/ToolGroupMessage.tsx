@@ -134,11 +134,7 @@ export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
     [allToolCalls, isLowErrorVerbosity],
   );
 
-  const {
-    activePtyId,
-    embeddedShellFocused,
-    backgroundTasks,
-  } = useUIState();
+  const { activePtyId, embeddedShellFocused, backgroundTasks } = useUIState();
   // H9: pendingHistoryItems is volatile — read from StreamingContext to avoid
   // re-rendering ToolGroupMessage on every stable UIStateContext update.
   const { pendingHistoryItems } = useStreamingContext();
@@ -195,6 +191,9 @@ export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
         !Array.isArray(prevGroup) &&
         isCompactTool(prevGroup, isCompactModeEnabled);
 
+      const prevIsTopic =
+        prevGroup && !Array.isArray(prevGroup) && isTopicTool(prevGroup.name);
+
       const nextGroup = !isLast ? groupedTools[i + 1] : null;
       const nextIsCompact =
         nextGroup &&
@@ -229,7 +228,7 @@ export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
 
       const isFirstProp = !!(isFirst
         ? (borderTopOverride ?? true)
-        : prevIsCompact);
+        : prevIsCompact || prevIsTopic);
 
       const showClosingBorder =
         !isCompact &&
@@ -366,6 +365,8 @@ export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
           prevGroup &&
           !Array.isArray(prevGroup) &&
           isCompactTool(prevGroup, isCompactModeEnabled);
+        const prevIsTopic =
+          prevGroup && !Array.isArray(prevGroup) && isTopicTool(prevGroup.name);
 
         const nextGroup = !isLast ? groupedTools[index + 1] : null;
         const nextIsCompact =
@@ -382,7 +383,7 @@ export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
 
         const isFirstProp = !!(isFirst
           ? (borderTopOverride ?? true)
-          : prevIsCompact);
+          : prevIsCompact || prevIsTopic);
 
         const showClosingBorder =
           !isCompact &&

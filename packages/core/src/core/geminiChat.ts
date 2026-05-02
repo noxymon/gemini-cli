@@ -48,6 +48,7 @@ import {
 } from '../telemetry/types.js';
 import { handleFallback } from '../fallback/handler.js';
 import { isFunctionResponse } from '../utils/messageInspectors.js';
+import { scrubHistory } from '../utils/historyHardening.js';
 import { partListUnionToString } from './geminiRequest.js';
 import type { ModelConfigKey } from '../services/modelConfigService.js';
 import { estimateTokenCountSync } from '../utils/tokenCalculation.js';
@@ -56,8 +57,8 @@ import {
   createAvailabilityContextProvider,
 } from '../availability/policyHelpers.js';
 import { coreEvents } from '../utils/events.js';
-import { debugLogger } from '../utils/debugLogger.js';
 import type { AgentLoopContext } from '../config/agent-loop-context.js';
+import { debugLogger } from '../utils/debugLogger.js';
 
 export enum StreamEventType {
   /** A regular content chunk from the API. */
@@ -95,9 +96,19 @@ const MID_STREAM_RETRY_OPTIONS: MidStreamRetryOptions = {
   useExponentialBackoff: true,
 };
 
-const STREAM_IDLE_TIMEOUT_MS = 90000; // 90 seconds
-
 export const SYNTHETIC_THOUGHT_SIGNATURE = 'skip_thought_signature_validator';
+
+/**
+ * Internal interface for parts that carry the magic 'callIndex' property
+ * used during model response consolidation.
+ */
+interface IndexedPart extends Part {
+  callIndex?: number;
+}
+
+function isIndexedPart(part: Part): part is IndexedPart {
+  return 'callIndex' in part;
+}
 
 /**
  * Returns true if the response is valid, false otherwise.
@@ -253,10 +264,11 @@ export class GeminiChat {
   private sendPromise: Promise<void> = Promise.resolve();
   private readonly chatRecordingService: ChatRecordingService;
   private lastPromptTokenCount: number;
+  private callCounter = 0;
   agentHistory: AgentChatHistory;
 
   constructor(
-    private readonly context: AgentLoopContext,
+    readonly context: AgentLoopContext,
     private systemInstruction: string = '',
     private tools: Tool[] = [],
     history: Content[] = [],
@@ -427,11 +439,13 @@ export class GeminiChat {
             );
 
             const isContentError = error instanceof InvalidStreamError;
+            const isRetryableContentError =
+              isContentError && error.type !== 'NO_RESPONSE_TEXT';
             const errorType = isContentError
               ? error.type
               : getRetryErrorType(error);
 
-            if (isContentError || (isRetryable && !signal.aborted)) {
+            if (isRetryableContentError || (isRetryable && !signal.aborted)) {
               // The issue requests exactly 3 retries (4 attempts) for API errors during stream iteration.
               // Regardless of the global maxAttempts (e.g. 10), we only want to retry these mid-stream API errors
               // up to 3 times before finally throwing the error to the user.
@@ -503,8 +517,14 @@ export class GeminiChat {
     abortSignal: AbortSignal,
     role: LlmRole,
   ): Promise<AsyncGenerator<GenerateContentResponse>> {
+    // Last mile scrubbing to remove internal tracking properties (e.g. callIndex)
+    // before sending to the Gemini API. This whitelists only standard Gemini fields.
+    const scrubbedContents = this.context.config.isContextManagementEnabled()
+      ? scrubHistory([...requestContents])
+      : [...requestContents];
+
     const contentsForPreviewModel =
-      this.ensureActiveLoopHasThoughtSignatures(requestContents);
+      this.ensureActiveLoopHasThoughtSignatures(scrubbedContents);
 
     // Track final request parameters for AfterModel hooks
     const {
@@ -773,8 +793,11 @@ export class GeminiChat {
     this.agentHistory.push(content);
   }
 
-  setHistory(history: readonly Content[]): void {
-    this.agentHistory.set(history);
+  setHistory(
+    history: readonly Content[],
+    options: { silent?: boolean } = {},
+  ): void {
+    this.agentHistory.set(history, options);
     this.lastPromptTokenCount = estimateTokenCountSync(
       this.agentHistory.flatMap((c) => c.parts || []),
     );
@@ -893,118 +916,126 @@ export class GeminiChat {
     let finishReason: FinishReason | undefined;
 
     // The SDK provides fully assembled FunctionCall objects in chunk.functionCalls
-    const finalFunctionCalls: FunctionCall[] = [];
+    // We use a Map to ensure we only keep the latest version of each call (by ID)
+    const finalFunctionCallsMap = new Map<string, FunctionCall>();
+    const legacyFunctionCalls: FunctionCall[] = [];
 
-    let watchdogTimer: NodeJS.Timeout | undefined;
-    const resetWatchdog = () => {
-      if (!this.context.config.getEnableStreamWatchdog?.()) {
-        return;
+    // Map to track synthetic IDs assigned to each call index across chunks
+    const callIndexToId = new Map<number, string>();
+
+    for await (const chunk of streamResponse) {
+      const candidateWithReason = chunk?.candidates?.find(
+        (candidate) => candidate.finishReason,
+      );
+      if (candidateWithReason) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        finishReason = candidateWithReason.finishReason as FinishReason;
       }
-      if (watchdogTimer) clearTimeout(watchdogTimer);
-      watchdogTimer = setTimeout(() => {
-        debugLogger.error('Stream idle timeout exceeded');
-        // We don't have direct access to the abort controller here,
-        // but throwing will break the async generator loop.
-      }, STREAM_IDLE_TIMEOUT_MS);
-    };
 
-    try {
-      for await (const chunk of streamResponse) {
-        resetWatchdog();
-        const candidateWithReason = chunk?.candidates?.find(
-          (candidate) => candidate.finishReason,
-        );
-        if (candidateWithReason) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          finishReason = candidateWithReason.finishReason as FinishReason;
-        }
-
-        if (chunk.functionCalls && chunk.functionCalls.length > 0) {
-          finalFunctionCalls.push(...chunk.functionCalls);
-        }
-
-        if (isValidResponse(chunk)) {
-          const content = chunk.candidates?.[0]?.content;
-          if (content?.parts) {
-            if (content.parts.some((part) => part.thought)) {
-              // Record thoughts
-              hasThoughts = true;
-              this.recordThoughtFromContent(content);
+      if (chunk.functionCalls && chunk.functionCalls.length > 0) {
+        if (this.context.config.isContextManagementEnabled()) {
+          for (let i = 0; i < chunk.functionCalls.length; i++) {
+            const fnCall = chunk.functionCalls[i];
+            if (!fnCall.id) {
+              let id = callIndexToId.get(i);
+              if (!id) {
+                id = `synth_${this.context.promptId}_${Date.now()}_${this.callCounter++}`;
+                callIndexToId.set(i, id);
+                debugLogger.log(
+                  `[GeminiChat] Assigned synthetic ID: ${id} to tool at index ${i}: ${fnCall.name}`,
+                );
+              }
+              fnCall.id = id;
             }
-            if (content.parts.some((part) => part.functionCall)) {
-              hasToolCall = true;
-            }
-
-            modelResponseParts.push(
-              ...content.parts.filter((part) => !part.thought),
-            );
+            finalFunctionCallsMap.set(fnCall.id, fnCall);
           }
-        }
-
-        // Record token usage if this chunk has usageMetadata
-        if (chunk.usageMetadata) {
-          this.chatRecordingService.recordMessageTokens(chunk.usageMetadata);
-          if (chunk.usageMetadata.promptTokenCount !== undefined) {
-            this.lastPromptTokenCount = chunk.usageMetadata.promptTokenCount;
-          }
-        }
-
-        const hookSystem = this.context.config.getHookSystem();
-        if (originalRequest && chunk && hookSystem) {
-          const hookResult = await hookSystem.fireAfterModelEvent(
-            originalRequest,
-            chunk,
-          );
-
-          if (hookResult.stopped) {
-            throw new AgentExecutionStoppedError(
-              hookResult.reason || 'Agent execution stopped by hook',
-            );
-          }
-
-          if (hookResult.blocked) {
-            throw new AgentExecutionBlockedError(
-              hookResult.reason || 'Agent execution blocked by hook',
-              hookResult.response,
-            );
-          }
-
-          yield hookResult.response;
         } else {
-          yield chunk;
-        }
-
-        if (finishReason) {
-          break;
+          legacyFunctionCalls.push(...chunk.functionCalls);
         }
       }
-    } finally {
-      if (watchdogTimer) clearTimeout(watchdogTimer);
+      if (isValidResponse(chunk)) {
+        const content = chunk.candidates?.[0]?.content;
+        if (content?.parts) {
+          if (content.parts.some((part) => part.thought)) {
+            // Record thoughts
+            hasThoughts = true;
+            this.recordThoughtFromContent(content);
+          }
+          if (content.parts.some((part) => part.functionCall)) {
+            hasToolCall = true;
+          }
+
+          modelResponseParts.push(
+            ...content.parts
+              .filter((part) => !part.thought)
+              .map((part) => {
+                if (!this.context.config.isContextManagementEnabled()) {
+                  return part;
+                }
+                return {
+                  ...part,
+                  callIndex: chunk.functionCalls?.findIndex(
+                    (fc) => fc.name === part.functionCall?.name,
+                  ),
+                };
+              }),
+          );
+        }
+      }
+
+      // Record token usage if this chunk has usageMetadata
+      if (chunk.usageMetadata) {
+        this.chatRecordingService.recordMessageTokens(chunk.usageMetadata);
+        if (chunk.usageMetadata.promptTokenCount !== undefined) {
+          this.lastPromptTokenCount = chunk.usageMetadata.promptTokenCount;
+        }
+      }
+
+      const hookSystem = this.context.config.getHookSystem();
+      if (originalRequest && chunk && hookSystem) {
+        const hookResult = await hookSystem.fireAfterModelEvent(
+          originalRequest,
+          chunk,
+        );
+
+        if (hookResult.stopped) {
+          throw new AgentExecutionStoppedError(
+            hookResult.reason || 'Agent execution stopped by hook',
+          );
+        }
+
+        if (hookResult.blocked) {
+          throw new AgentExecutionBlockedError(
+            hookResult.reason || 'Agent execution blocked by hook',
+            hookResult.response,
+          );
+        }
+
+        yield hookResult.response;
+      } else {
+        yield chunk;
+      }
     }
 
     // String thoughts and consolidate text parts.
     const consolidatedParts: Part[] = [];
+    const finalFunctionCalls = this.context.config.isContextManagementEnabled()
+      ? Array.from(finalFunctionCallsMap.values())
+      : legacyFunctionCalls;
 
+    let currentCallSourceIndex = -1;
     if (this.context.config.isContextManagementEnabled()) {
+      debugLogger.log(
+        `[GeminiChat] Starting consolidation for ${modelResponseParts.length} raw parts and ${finalFunctionCalls.length} assembled function calls.`,
+      );
       for (const part of modelResponseParts) {
         if (part.functionCall) {
-          // Skip partial functionCall stream chunks! We will replace them
-          // entirely with the pristine, fully assembled objects from the SDK
-          // (finalFunctionCalls) immediately below. We only push the very first
-          // partial chunk of a sequence as a placeholder so we know *where*
-          // in the sequence of parts the tool call happened.
-          const lastPart = consolidatedParts[consolidatedParts.length - 1];
-          const currentId = part.functionCall.id;
-          const lastId = lastPart?.functionCall?.id;
-
+          const partIndex = isIndexedPart(part) ? part.callIndex : undefined;
           const isNewCall =
-            !lastPart?.functionCall ||
-            (currentId !== undefined &&
-              lastId !== undefined &&
-              currentId !== lastId) ||
-            lastPart.functionCall.name !== part.functionCall.name;
+            partIndex !== undefined && partIndex > currentCallSourceIndex;
 
           if (isNewCall) {
+            currentCallSourceIndex = partIndex;
             consolidatedParts.push({ ...part }); // Push placeholder
           }
         } else {

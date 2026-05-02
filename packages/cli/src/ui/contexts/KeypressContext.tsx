@@ -356,120 +356,124 @@ function bufferPaste(keypressHandler: KeypressHandler): KeypressHandler {
  * Buffers escape sequences until a full sequence is received or
  * until a timeout occurs.
  */
+// Below this batch size, printable characters are fed through the parser one
+// at a time so they produce individual keypress events. At or above it, we
+// emit a single 'paste' event to bypass per-character React re-renders, which
+// is the actual UI hang case (large clipboard pastes).
+const PASTE_BATCH_THRESHOLD = 32;
+
 function createDataListener(keypressHandler: KeypressHandler) {
-  // Track whether we are inside a bracketed-paste region so the fast batch
-  // path is only activated for actual paste content (never for regular
-  // typing or terminal responses such as OSC 11 background colour replies).
-  let inBracketedPaste = false;
-
-  // Track whether the generator is at the top of its main loop (neutral) or
-  // suspended mid-sequence. We can only bypass the generator (batch path)
-  // when it is neutral; otherwise we risk discarding the tail of a split
-  // escape sequence (e.g. the second half of a PASTE_END marker that
-  // arrived across two separate data events).
-  let parserIsNeutral = true;
-
-  const wrappedHandler: KeypressHandler = (key: Key) => {
-    if (key.name === 'paste-start') inBracketedPaste = true;
-    else if (key.name === 'paste-end') inBracketedPaste = false;
-    // The generator just completed a sequence and looped back to the top of
-    // its main while-loop, so it is waiting at a fresh "let ch = yield".
-    parserIsNeutral = true;
+  // Wrap the handler so we can detect when the parser actually emits a key
+  // event. This lets us know precisely when an in-progress escape sequence
+  // (CSI / SS3 / OSC / etc.) has finished, without duplicating the parser's
+  // state machine in the dispatcher.
+  let parserEmitted = false;
+  const trackedHandler: KeypressHandler = (key) => {
+    parserEmitted = true;
     return keypressHandler(key);
   };
-
-  const parser = emitKeys(wrappedHandler);
+  const parser = emitKeys(trackedHandler);
   parser.next(); // prime the generator so it starts listening.
 
-  // Feed a single character to the generator and update parserIsNeutral.
-  // Must be called instead of parser.next() directly so the neutral-state
-  // flag stays accurate.
-  function feedToParser(ch: string): void {
-    // The generator may suspend without emitting a key (mid-sequence), so
-    // assume not-neutral; wrappedHandler will flip it back to true if a key
-    // is emitted synchronously during this call.
-    parserIsNeutral = false;
-    parser.next(ch);
-  }
+  // ESC-sequence state. Persists across data chunks because a chunk may end
+  // mid-sequence and the next chunk may continue it.
+  let inEscape = false;
+  // Intro byte after ESC: '[' = CSI, 'O' = SS3, ']' = OSC, etc. Empty when we
+  // have just seen ESC and not yet the intro, or when not in a sequence.
+  let escapeIntro = '';
 
   let timeoutId: NodeJS.Timeout;
   return (data: string) => {
     clearTimeout(timeoutId);
 
-    if (data.includes(ESC)) {
-      // Any chunk containing an ESC byte may carry an escape sequence (OSC,
-      // CSI, SS3, terminal response, etc.). Process every character through
-      // the generator so the sequence parser can consume the full sequence
-      // before anything is handed to the keypress handler. This prevents
-      // terminal responses such as OSC 11 (background colour query reply)
-      // from leaking into the text input buffer.
-      // Performance: these chunks are small (keyboard events, terminal
-      // responses). Large paste payloads arrive as separate all-printable
-      // chunks that still take the fast batch path below.
-      for (const char of data) {
-        feedToParser(char);
-      }
-    } else if (inBracketedPaste && parserIsNeutral) {
-      // Inside a bracketed-paste region, no escape sequences, and the
-      // generator is idle: batch printable characters to avoid thousands of
-      // generator yields for large pastes (e.g. the content between
-      // \x1b[200~ and \x1b[201~). Calling keypressHandler directly bypasses
-      // the generator; bufferPaste (upstream in the handler chain) is
-      // already in its collection loop and accumulates the sequence.
-      let i = 0;
-      while (i < data.length) {
-        const ch = data[i];
-        if (ch < ' ' || ch === '\x7f') {
-          feedToParser(ch);
-          i++;
+    // Optimize: batch large runs of printable characters into a single 'paste'
+    // event to avoid thousands of generator yields and per-key React renders
+    // for clipboard pastes. We must NOT batch characters that are part of an
+    // escape sequence (e.g. `[A` of `\x1b[A` are arrow-key bytes, not paste
+    // content), and small runs (typical fast typing or short test inputs) must
+    // still produce individual keypress events.
+    let i = 0;
+    while (i < data.length) {
+      const ch = data[i];
+
+      if (inEscape) {
+        // Inside an ESC sequence: feed every char through the parser so it
+        // can correctly assemble CSI/SS3/OSC. We exit escape mode when either
+        // the parser emits a key event (sequence consumed) or when we see a
+        // sequence-ending byte — needed for sequences the parser intentionally
+        // ignores (focus events, mouse reports) so we do not get stuck.
+        parserEmitted = false;
+        parser.next(ch);
+        if (escapeIntro === '') {
+          // First byte after ESC is the intro ('[', 'O', ']', etc.).
+          escapeIntro = ch;
         } else {
-          let batch = '';
-          while (
-            i < data.length &&
-            data[i] >= ' ' &&
-            data[i] !== ESC &&
-            data[i] !== '\x7f'
-          ) {
-            batch += data[i];
-            i++;
+          let isFinal: boolean;
+          if (escapeIntro === ']') {
+            // OSC ends with BEL (\x07) or the second byte of ST (ESC \).
+            isFinal = ch === '\x07' || ch === '\\';
+          } else {
+            // CSI / SS3 / others: final byte is in 0x40-0x7E (@-~).
+            isFinal = ch >= '@' && ch <= '~';
           }
-          if (batch.length > 1) {
-            // Bypass the generator: parserIsNeutral is unchanged (true).
-            keypressHandler({
-              name: 'paste',
-              shift: false,
-              alt: false,
-              ctrl: false,
-              cmd: false,
-              insertable: true,
-              sequence: batch,
-            });
-          } else if (batch.length === 1) {
-            feedToParser(batch);
+          if (parserEmitted || isFinal) {
+            inEscape = false;
+            escapeIntro = '';
           }
         }
+        i++;
+        continue;
       }
-    } else {
-      // No escape sequences but either not inside a paste region or the
-      // generator is mid-sequence: process every character through the
-      // generator so each char yields a correct individual keypress event,
-      // and any pending escape sequence tail is correctly completed.
-      for (const char of data) {
-        feedToParser(char);
+
+      if (ch < ' ' || ch === ESC || ch === '\x7f') {
+        // Control character or escape sequence start, must go through the
+        // generator parser to handle correctly (e.g. TAB for completion,
+        // ESC sequences for arrows / function keys).
+        parser.next(ch);
+        if (ch === ESC) {
+          inEscape = true;
+          escapeIntro = '';
+        }
+        i++;
+      } else {
+        // Collect as many printable (non-control) characters as possible
+        let batch = '';
+        while (
+          i < data.length &&
+          data[i] >= ' ' &&
+          data[i] !== ESC &&
+          data[i] !== '\x7f'
+        ) {
+          batch += data[i];
+          i++;
+        }
+
+        if (batch.length >= PASTE_BATCH_THRESHOLD) {
+          keypressHandler({
+            name: 'paste',
+            shift: false,
+            alt: false,
+            ctrl: false,
+            cmd: false,
+            insertable: true,
+            sequence: batch,
+          });
+        } else {
+          // Below threshold: feed each character to the parser so it produces
+          // individual keypress events (preserves keypress semantics for
+          // typing and short inputs).
+          for (const c of batch) {
+            parser.next(c);
+          }
+        }
       }
     }
 
     if (data.length !== 0) {
-      timeoutId = setTimeout(() => {
-        // Timeout flush: the generator will consume the empty string and
-        // return to the top of its main loop regardless of prior state.
-        parserIsNeutral = true;
-        parser.next('');
-      }, ESC_TIMEOUT);
+      timeoutId = setTimeout(() => parser.next(''), ESC_TIMEOUT);
     }
   };
 }
-
 
 /**
  * Translates raw keypress characters into key events.

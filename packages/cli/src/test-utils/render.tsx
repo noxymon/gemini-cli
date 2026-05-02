@@ -595,6 +595,7 @@ const mockUIActions: UIActions = {
   setActiveBackgroundTaskPid: vi.fn(),
   setIsBackgroundTaskListOpen: vi.fn(),
   setAuthContext: vi.fn(),
+  dismissLoginRestart: vi.fn(),
   onHintInput: vi.fn(),
   onHintBackspace: vi.fn(),
   onHintClear: vi.fn(),
@@ -756,7 +757,8 @@ export const renderWithProviders = async (
                         value={(() => {
                           const sv: StreamingContextValue = {
                             streamingState: finalUiState.streamingState,
-                            pendingHistoryItems: finalUiState.pendingHistoryItems ?? [],
+                            pendingHistoryItems:
+                              finalUiState.pendingHistoryItems ?? [],
                             thought: null,
                             elapsedTime: 0,
                             currentLoadingPhrase: undefined,
