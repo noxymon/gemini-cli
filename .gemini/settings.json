@@ -13,7 +13,10 @@
   "tools": {
     "sandboxAllowedPaths": [
       "C:\\Users\\USER\\Documents\\Code\\cl4ud3-c000000d3"
-    ]
+    ],
+    "lsp": {
+      "enabled": true
+    }
   },
   "hooksConfig": {
     "disabled": [

@@ -1065,6 +1065,11 @@ export async function loadCliConfig(
     experimentalAutoMemory: settings.experimental?.autoMemory,
     experimentalGemma: settings.experimental?.gemma,
     contextManagement,
+    lspEnabled:
+      process.env['ENABLE_LSP_TOOLS'] === 'true' ||
+      settings.tools?.lsp?.enabled,
+    lspDiagnosticTimeout: settings.tools?.lsp?.diagnosticTimeout,
+    lspServers: settings.tools?.lsp?.servers,
     modelSteering: settings.experimental?.modelSteering,
     topicUpdateNarration:
       settings.general?.topicUpdateNarration ??

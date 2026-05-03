@@ -243,11 +243,21 @@ export function translateEvent(
     case GeminiEventType.ToolCallResponse: {
       ensureStreamStart(state, out);
       const data = buildToolResponseData(event.value);
-      const display: ToolDisplay | undefined = event.value.resultDisplay
+      const hasDisplayInfo =
+        event.value.resultDisplay !== undefined ||
+        event.value.displayFooter !== undefined;
+      const display: ToolDisplay | undefined = hasDisplayInfo
         ? {
-            result: toolResultDisplayToDisplayContent(
-              event.value.resultDisplay,
-            ),
+            ...(event.value.resultDisplay !== undefined
+              ? {
+                  result: toolResultDisplayToDisplayContent(
+                    event.value.resultDisplay,
+                  ),
+                }
+              : {}),
+            ...(event.value.displayFooter
+              ? { footer: event.value.displayFooter }
+              : {}),
           }
         : undefined;
       out.push(

@@ -15,6 +15,7 @@ import { theme } from '../../semantic-colors.js';
 import {
   type AnsiOutput,
   type AnsiLine,
+  type DisplayFooter,
   isSubagentProgress,
   isStructuredToolResult,
 } from '@google/gemini-cli-core';
@@ -30,6 +31,7 @@ import { SubagentProgressDisplay } from './SubagentProgressDisplay.js';
 
 export interface ToolResultDisplayProps {
   resultDisplay: string | object | undefined;
+  displayFooter?: DisplayFooter;
   availableTerminalHeight?: number;
   terminalWidth: number;
   renderOutputAsMarkdown?: boolean;
@@ -43,8 +45,27 @@ interface FileDiffResult {
   fileName: string;
 }
 
+const FooterLine: React.FC<{ footer: DisplayFooter }> = ({ footer }) => {
+  const color =
+    footer.severity === 'error'
+      ? theme.status.error
+      : footer.severity === 'warning'
+        ? theme.status.warning
+        : footer.severity === 'success'
+          ? theme.status.success
+          : theme.text.secondary;
+  return (
+    <Box paddingTop={0}>
+      <Text color={color} dimColor={footer.severity === 'success'}>
+        {footer.text}
+      </Text>
+    </Box>
+  );
+};
+
 export const ToolResultDisplay: React.FC<ToolResultDisplayProps> = ({
   resultDisplay,
+  displayFooter,
   availableTerminalHeight,
   terminalWidth,
   renderOutputAsMarkdown = true,
@@ -78,7 +99,18 @@ export const ToolResultDisplay: React.FC<ToolResultDisplayProps> = ({
     [],
   );
 
-  if (!resultDisplay) return null;
+  const footer = displayFooter ? <FooterLine footer={displayFooter} /> : null;
+
+  // When there's no body content but we do have a footer, render the footer
+  // alone (inside a column Box so downstream consumers see a predictable
+  // React element).
+  if (!resultDisplay) {
+    return footer ? (
+      <Box width={childWidth} flexDirection="column">
+        {footer}
+      </Box>
+    ) : null;
+  }
 
   // 1. Early return for background tools (Todos)
   if (typeof resultDisplay === 'object' && 'todos' in resultDisplay) {
@@ -237,6 +269,7 @@ export const ToolResultDisplay: React.FC<ToolResultDisplayProps> = ({
             initialScrollIndex={initialScrollIndex}
             hasFocus={hasFocus}
           />
+          {footer}
         </Box>
       );
     } else {
@@ -274,6 +307,7 @@ export const ToolResultDisplay: React.FC<ToolResultDisplayProps> = ({
               );
             })}
           </MaxSizedBox>
+          {footer}
         </Box>
       );
     }
@@ -285,6 +319,7 @@ export const ToolResultDisplay: React.FC<ToolResultDisplayProps> = ({
     return (
       <Box width={childWidth} flexDirection="column">
         {renderContent(resultDisplay)}
+        {footer}
       </Box>
     );
   }
@@ -303,6 +338,7 @@ export const ToolResultDisplay: React.FC<ToolResultDisplayProps> = ({
       >
         {(truncatedResultDisplay) => renderContent(truncatedResultDisplay)}
       </SlicingMaxSizedBox>
+      {footer}
     </Box>
   );
 };

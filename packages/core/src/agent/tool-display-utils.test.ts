@@ -72,6 +72,67 @@ describe('tool-display-utils', () => {
         afterText: 'new',
       });
     });
+
+    it('attaches displayFooter at the top level of ToolDisplay', () => {
+      const display = populateToolDisplay({
+        name: 'test',
+        resultDisplay: 'hello world',
+        displayFooter: { text: 'LSP: 2 errors', severity: 'error' },
+      });
+      expect(display.result).toEqual({ type: 'text', text: 'hello world' });
+      expect(display.footer).toEqual({
+        text: 'LSP: 2 errors',
+        severity: 'error',
+      });
+    });
+
+    it('attaches displayFooter alongside a FileDiff-translated DisplayDiff', () => {
+      const fileDiff = {
+        fileDiff: '@@ ...',
+        fileName: 'test.ts',
+        filePath: 'src/test.ts',
+        originalContent: 'old',
+        newContent: 'new',
+      } as unknown as ToolResultDisplay;
+      const display = populateToolDisplay({
+        name: 'test',
+        resultDisplay: fileDiff,
+        displayFooter: { text: 'LSP: no issues found', severity: 'success' },
+      });
+      expect(display.result).toEqual({
+        type: 'diff',
+        path: 'src/test.ts',
+        beforeText: 'old',
+        afterText: 'new',
+      });
+      expect(display.footer).toEqual({
+        text: 'LSP: no issues found',
+        severity: 'success',
+      });
+    });
+
+    it('attaches displayFooter even when resultDisplay is absent', () => {
+      // This is the read_file case: the tool returns no structured display,
+      // only a status footer.
+      const display = populateToolDisplay({
+        name: 'test',
+        displayFooter: { text: 'LSP: no issues found', severity: 'success' },
+      });
+      expect(display.result).toBeUndefined();
+      expect(display.footer).toEqual({
+        text: 'LSP: no issues found',
+        severity: 'success',
+      });
+    });
+
+    it('omits footer when displayFooter is undefined', () => {
+      const display = populateToolDisplay({
+        name: 'test',
+        resultDisplay: 'hello',
+      });
+      expect(display.result).toEqual({ type: 'text', text: 'hello' });
+      expect(display.footer).toBeUndefined();
+    });
   });
 
   describe('renderDisplayDiff', () => {

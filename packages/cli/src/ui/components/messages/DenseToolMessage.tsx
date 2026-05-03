@@ -9,6 +9,7 @@ import { useMemo, useState, useRef } from 'react';
 import { Box, Text, type DOMElement } from 'ink';
 import {
   CoreToolCallStatus,
+  type DisplayFooter,
   type FileDiff,
   type ListDirectoryResult,
   type ReadManyFilesResult,
@@ -258,12 +259,26 @@ function getGenericSuccessData(
   return { description, summary, payload };
 }
 
+function footerColor(footer: DisplayFooter): string {
+  switch (footer.severity) {
+    case 'error':
+      return theme.status.error;
+    case 'warning':
+      return theme.status.warning;
+    case 'success':
+      return theme.status.success;
+    default:
+      return theme.text.secondary;
+  }
+}
+
 export const DenseToolMessage: React.FC<DenseToolMessageProps> = (props) => {
   const {
     callId,
     name,
     status,
     resultDisplay,
+    displayFooter,
     confirmationDetails,
     outputFile,
     terminalWidth,
@@ -470,6 +485,22 @@ export const DenseToolMessage: React.FC<DenseToolMessageProps> = (props) => {
             flexGrow={0}
           >
             {summary}
+          </Box>
+        )}
+        {displayFooter && (
+          <Box
+            key="tool-footer"
+            marginLeft={1}
+            flexGrow={0}
+            flexDirection="row"
+          >
+            <Text color={theme.text.secondary}>· </Text>
+            <Text
+              color={footerColor(displayFooter)}
+              dimColor={displayFooter.severity === 'success'}
+            >
+              {displayFooter.text}
+            </Text>
           </Box>
         )}
       </Box>

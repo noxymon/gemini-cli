@@ -10,7 +10,12 @@ import type {
   ToolResult,
   ToolResultDisplay,
 } from '../tools/tools.js';
-import type { ToolDisplay, DisplayContent, DisplayDiff } from './types.js';
+import type {
+  ToolDisplay,
+  DisplayContent,
+  DisplayDiff,
+  DisplayFooter,
+} from './types.js';
 
 /**
  * Populates a ToolDisplay object from a tool invocation and its result.
@@ -21,11 +26,13 @@ export function populateToolDisplay({
   invocation,
   resultDisplay,
   displayName,
+  displayFooter,
 }: {
   name: string;
   invocation?: ToolInvocation<object, ToolResult>;
   resultDisplay?: ToolResultDisplay;
   displayName?: string;
+  displayFooter?: DisplayFooter;
 }): ToolDisplay {
   const display: ToolDisplay = {
     name: displayName || name,
@@ -34,6 +41,10 @@ export function populateToolDisplay({
 
   if (resultDisplay) {
     display.result = toolResultDisplayToDisplayContent(resultDisplay);
+  }
+
+  if (displayFooter) {
+    display.footer = displayFooter;
   }
 
   return display;

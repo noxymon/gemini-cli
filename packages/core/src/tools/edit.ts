@@ -30,6 +30,7 @@ import { makeRelative, shortenPath } from '../utils/paths.js';
 import { isNodeError } from '../utils/errors.js';
 import { correctPath } from '../utils/pathCorrector.js';
 import type { Config } from '../config/config.js';
+import { enrichToolResultWithLsp } from '../lsp/enrichment.js';
 import { CoreToolCallStatus } from '../scheduler/types.js';
 
 import { DEFAULT_DIFF_OPTIONS, getDiffStat } from './diffOptions.js';
@@ -995,9 +996,21 @@ ${snippet}`);
         llmContent = appendJitContext(llmContent, jitContext);
       }
 
-      return {
+      // LSP enrichment: run diagnostics on the edited file content and
+      // attach a status footer for the user. Only meaningful when the
+      // edit actually produced a diff (i.e. editData.newContent exists).
+      const enriched = await enrichToolResultWithLsp(
+        this.config,
+        this.resolvedPath,
+        editData.newContent,
         llmContent,
+        signal,
+      );
+
+      return {
+        llmContent: enriched.enrichedLlmContent,
         returnDisplay: displayResult,
+        displayFooter: enriched.displayFooter,
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);

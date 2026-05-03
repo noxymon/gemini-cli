@@ -11,6 +11,7 @@ import os from 'node:os';
 import * as Diff from 'diff';
 import { WRITE_FILE_TOOL_NAME, WRITE_FILE_DISPLAY_NAME } from './tool-names.js';
 import type { Config } from '../config/config.js';
+import { enrichToolResultWithLsp } from '../lsp/enrichment.js';
 
 import {
   BaseDeclarativeTool,
@@ -428,9 +429,20 @@ class WriteFileToolInvocation extends BaseToolInvocation<
         llmContent = appendJitContext(llmContent, jitContext);
       }
 
-      return {
+      // LSP enrichment: run diagnostics on the newly written content and
+      // attach a status footer for the user.
+      const enriched = await enrichToolResultWithLsp(
+        this.config,
+        this.resolvedPath,
+        correctedContentResult.correctedContent,
         llmContent,
+        abortSignal,
+      );
+
+      return {
+        llmContent: enriched.enrichedLlmContent,
         returnDisplay: displayResult,
+        displayFooter: enriched.displayFooter,
       };
     } catch (error) {
       // Capture detailed error information for debugging

@@ -22,6 +22,7 @@ import {
 } from '../confirmation-bus/types.js';
 import { ApprovalMode } from '../policy/types.js';
 import type { SubagentProgress } from '../agents/types.js';
+import type { DisplayFooter } from '../agent/types.js';
 
 /**
 /**
@@ -767,6 +768,14 @@ export interface ToolResult {
    * Optional data payload for passing structured information back to the caller.
    */
   data?: Record<string, unknown>;
+
+  /**
+   * Optional status line displayed beneath the tool's result in the UI.
+   * Used by enrichment layers (e.g. LSP diagnostics) to surface a summary
+   * alongside the tool's primary output. Propagated onto the
+   * `DisplayContent.footer` slot by the event translator.
+   */
+  displayFooter?: DisplayFooter;
 
   /**
    * Optional request to execute another tool immediately after this one.

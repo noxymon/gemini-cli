@@ -175,6 +175,22 @@ export interface AgentMessage {
   content: ContentPart[];
 }
 
+/**
+ * A short status line displayed beneath tool output. Typically used by
+ * enrichment layers (e.g. LSP diagnostics) to surface a summary that the
+ * model's free-text output can't convey directly.
+ *
+ * Severity values:
+ *   error   - red      (problems found)
+ *   warning - yellow   (partial result, unknown state, non-fatal issue)
+ *   success - dim green (check passed, no problems found)
+ *   info    - dim gray  (neutral informational summary)
+ */
+export type DisplayFooter = {
+  text: string;
+  severity: 'error' | 'warning' | 'success' | 'info';
+};
+
 export type DisplayText = { type: 'text'; text: string };
 export type DisplayDiff = {
   type: 'diff';
@@ -189,6 +205,13 @@ export interface ToolDisplay {
   description?: string;
   resultSummary?: string;
   result?: DisplayContent;
+  /**
+   * Optional status line rendered beneath the tool's primary output.
+   * Lives at the top level of ToolDisplay (rather than inside DisplayContent)
+   * so it survives even when a tool has no structured result (e.g. read_file
+   * whose returnDisplay is an empty string).
+   */
+  footer?: DisplayFooter;
 }
 
 export interface ToolRequest {
