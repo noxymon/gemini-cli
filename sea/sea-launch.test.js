@@ -439,6 +439,7 @@ describe('sea-launch', () => {
         },
         processUid: 1000,
         processPid: 123,
+        platform: 'linux',
       };
 
       mockGetAsset.mockReturnValue(Buffer.from('asset_content'));
