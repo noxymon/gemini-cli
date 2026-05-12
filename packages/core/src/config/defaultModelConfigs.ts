@@ -221,6 +221,19 @@ export const DEFAULT_MODEL_CONFIGS: ModelConfigServiceConfig = {
       extends: 'gemini-3-flash-base',
       modelConfig: {},
     },
+    'context-snapshotter': {
+      extends: 'gemini-3-flash-base',
+      modelConfig: {
+        generateContentConfig: {
+          thinkingConfig: {
+            thinkingLevel: ThinkingLevel.HIGH,
+          },
+          temperature: 1,
+          topP: 0.95,
+          topK: 64,
+        },
+      },
+    },
     'chat-compression-3-pro': {
       modelConfig: {
         model: 'gemini-3-pro-preview',
@@ -565,6 +578,42 @@ export const DEFAULT_MODEL_CONFIGS: ModelConfigServiceConfig = {
       {
         model: 'gemini-3-flash-preview',
         isLastResort: true,
+        maxAttempts: 10,
+        actions: {
+          terminal: 'prompt',
+          transient: 'prompt',
+          not_found: 'prompt',
+          unknown: 'prompt',
+        },
+        stateTransitions: {
+          terminal: 'terminal',
+          transient: 'terminal',
+          not_found: 'terminal',
+          unknown: 'terminal',
+        },
+      },
+    ],
+    'auto-preview': [
+      {
+        model: 'gemini-3-pro-preview',
+        maxAttempts: 3,
+        actions: {
+          terminal: 'prompt',
+          transient: 'silent',
+          not_found: 'prompt',
+          unknown: 'prompt',
+        },
+        stateTransitions: {
+          terminal: 'terminal',
+          transient: 'sticky_retry',
+          not_found: 'terminal',
+          unknown: 'terminal',
+        },
+      },
+      {
+        model: 'gemini-3-flash-preview',
+        isLastResort: true,
+        maxAttempts: 10,
         actions: {
           terminal: 'prompt',
           transient: 'prompt',
@@ -590,7 +639,7 @@ export const DEFAULT_MODEL_CONFIGS: ModelConfigServiceConfig = {
         },
         stateTransitions: {
           terminal: 'terminal',
-          transient: 'terminal',
+          transient: 'sticky_retry',
           not_found: 'terminal',
           unknown: 'terminal',
         },
@@ -598,6 +647,42 @@ export const DEFAULT_MODEL_CONFIGS: ModelConfigServiceConfig = {
       {
         model: 'gemini-2.5-flash',
         isLastResort: true,
+        maxAttempts: 10,
+        actions: {
+          terminal: 'prompt',
+          transient: 'prompt',
+          not_found: 'prompt',
+          unknown: 'prompt',
+        },
+        stateTransitions: {
+          terminal: 'terminal',
+          transient: 'terminal',
+          not_found: 'terminal',
+          unknown: 'terminal',
+        },
+      },
+    ],
+    'auto-default': [
+      {
+        model: 'gemini-2.5-pro',
+        maxAttempts: 3,
+        actions: {
+          terminal: 'prompt',
+          transient: 'silent',
+          not_found: 'prompt',
+          unknown: 'prompt',
+        },
+        stateTransitions: {
+          terminal: 'terminal',
+          transient: 'sticky_retry',
+          not_found: 'terminal',
+          unknown: 'terminal',
+        },
+      },
+      {
+        model: 'gemini-2.5-flash',
+        isLastResort: true,
+        maxAttempts: 10,
         actions: {
           terminal: 'prompt',
           transient: 'prompt',
