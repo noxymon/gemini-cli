@@ -876,7 +876,12 @@ export class LocalAgentExecutor<TOutput extends z.ZodTypeAny> {
       });
       throw error; // Re-throw other errors or external aborts.
     } finally {
-      deadlineTimer.abort();
+      try {
+        // Use a specific reason for explicit cleanup to distinguish from timeout.
+        deadlineTimer.abort(new Error('Agent execution finished.'));
+      } catch (e) {
+        debugLogger.warn('Error during deadlineTimer cleanup:', e);
+      }
       logAgentFinish(
         this.context.config,
         new AgentFinishEvent(

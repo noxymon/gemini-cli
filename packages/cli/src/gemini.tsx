@@ -49,6 +49,7 @@ import os from 'node:os';
 import dns from 'node:dns';
 import * as path from 'node:path';
 import * as fsPromises from 'node:fs/promises';
+import * as fsSync from 'node:fs';
 import { start_sandbox } from './utils/sandbox.js';
 import {
   loadSettings,
@@ -193,6 +194,19 @@ ${reason.stack}`
         : ''
     }`;
     debugLogger.error(errorMessage);
+
+    // Also append to .gemini-crash.log in cwd. The debug console below is
+    // invisible if Ink has already unmounted, so this is the only durable
+    // record when the process exits mid-render.
+    try {
+      const crashPath = path.join(process.cwd(), '.gemini-crash.log');
+      const ts = new Date().toISOString();
+      const header = `\n===== [${ts}] pid=${process.pid} role=gemini.tsx kind=unhandledRejection =====\n`;
+      fsSync.appendFileSync(crashPath, header + errorMessage + '\n');
+    } catch {
+      // Never throw from the crash logger itself.
+    }
+
     if (!unhandledRejectionOccurred) {
       unhandledRejectionOccurred = true;
       appEvents.emit(AppEvent.OpenDebugConsole);

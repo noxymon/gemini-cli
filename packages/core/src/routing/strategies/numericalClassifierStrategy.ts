@@ -161,8 +161,17 @@ export class NumericalClassifierStrategy implements RoutingStrategy {
         role: LlmRole.UTILITY_ROUTER,
       });
 
-      const routerResponse = ClassifierResponseSchema.parse(jsonResponse);
-      const score = routerResponse.complexity_score;
+      let score: number;
+      let complexityReasoning: string;
+
+      if (typeof jsonResponse === 'number') {
+        score = jsonResponse;
+        complexityReasoning = 'LLM returned raw number score.';
+      } else {
+        const routerResponse = ClassifierResponseSchema.parse(jsonResponse);
+        score = routerResponse.complexity_score;
+        complexityReasoning = routerResponse.complexity_reasoning;
+      }
 
       const { threshold, groupLabel, modelAlias } =
         await this.getRoutingDecision(score, config);
@@ -189,7 +198,7 @@ export class NumericalClassifierStrategy implements RoutingStrategy {
         metadata: {
           source: `NumericalClassifier (${groupLabel})`,
           latencyMs,
-          reasoning: `[Score: ${score} / Threshold: ${threshold}] ${routerResponse.complexity_reasoning}`,
+          reasoning: `[Score: ${score} / Threshold: ${threshold}] ${complexityReasoning}`,
         },
       };
     } catch (error) {

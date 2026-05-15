@@ -6,7 +6,6 @@
 
 import { createHash } from 'node:crypto';
 import * as os from 'node:os';
-import si from 'systeminformation';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import type {
   StartSessionEvent,
@@ -266,9 +265,12 @@ let cachedGpuInfo: string | undefined;
 
 async function refreshGpuInfo(): Promise<void> {
   try {
+    const si = await import('systeminformation');
     const graphics = await si.graphics();
     if (graphics.controllers && graphics.controllers.length > 0) {
-      cachedGpuInfo = graphics.controllers.map((c) => c.model).join(', ');
+      cachedGpuInfo = graphics.controllers
+        .map((c: { model: string }) => c.model)
+        .join(', ');
     } else {
       cachedGpuInfo = NO_GPU;
     }

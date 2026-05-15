@@ -5,6 +5,8 @@
  */
 
 import { spawn } from 'node:child_process';
+import { appendFileSync } from 'node:fs';
+import { join } from 'node:path';
 import os from 'node:os';
 import v8 from 'node:v8';
 import {
@@ -14,6 +16,29 @@ import {
 } from './src/utils/processUtils.js';
 
 // --- Global Entry Point ---
+
+// Crash log lives in cwd so it survives Ink's alternate-screen restore.
+// Ink hides anything written to stderr/stdout during interactive mode, which
+// is why uncaught exceptions previously caused "silent" exits.
+const CRASH_LOG_PATH = join(process.cwd(), '.gemini-crash.log');
+const PROCESS_ROLE = process.env['GEMINI_CLI_NO_RELAUNCH'] ? 'child' : 'parent';
+
+function writeCrashEntry(kind: string, payload: unknown): void {
+  try {
+    const ts = new Date().toISOString();
+    const pid = process.pid;
+    const header = `\n===== [${ts}] pid=${pid} role=${PROCESS_ROLE} kind=${kind} =====\n`;
+    let body: string;
+    if (payload instanceof Error) {
+      body = `${payload.name}: ${payload.message}\n${payload.stack ?? '(no stack)'}\n`;
+    } else {
+      body = `${String(payload)}\n`;
+    }
+    appendFileSync(CRASH_LOG_PATH, header + body);
+  } catch {
+    // Never throw from the crash logger itself.
+  }
+}
 
 // Suppress known race condition error in node-pty on Windows
 // Tracking bug: https://github.com/microsoft/node-pty/issues/827
@@ -28,6 +53,21 @@ process.on('uncaughtException', (error) => {
     return;
   }
 
+  // Suppress AbortError. By WHATWG spec, exceptions thrown by AbortSignal
+  // event listeners are reported via globalThis.reportError (which surfaces
+  // here as uncaughtException), bypassing any try/catch around the abort()
+  // call. The most common source is stale node-fetch listeners on a combined
+  // AbortSignal.any(...) signal being invoked during DeadlineTimer cleanup
+  // in _LocalAgentExecutor.runInternal's finally block — the agent has
+  // already finished, the fetch was already settled, so the abort is benign.
+  // Matches the AbortError suppression in gemini.tsx's unhandledRejection handler.
+  if (error instanceof Error && error.name === 'AbortError') {
+    writeCrashEntry('suppressed-AbortError', error);
+    return;
+  }
+
+  writeCrashEntry('uncaughtException', error);
+
   // For other errors, we rely on the default behavior, but since we attached a listener,
   // we must manually replicate it.
   if (error instanceof Error) {
@@ -36,6 +76,20 @@ process.on('uncaughtException', (error) => {
     process.stderr.write(String(error) + '\n');
   }
   process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  // AbortError during cancellation is expected; gemini.tsx already suppresses it.
+  if (reason instanceof Error && reason.name === 'AbortError') {
+    return;
+  }
+  writeCrashEntry('unhandledRejection', reason);
+});
+
+process.on('exit', (code) => {
+  if (code !== 0 && code !== RELAUNCH_EXIT_CODE) {
+    writeCrashEntry('exit', `process.exit(${code})`);
+  }
 });
 
 async function getMemoryNodeArgs(): Promise<string[]> {

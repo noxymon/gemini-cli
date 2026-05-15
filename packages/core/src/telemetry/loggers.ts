@@ -88,7 +88,7 @@ import {
   recordBrowserAgentTaskOutcome,
   recordBrowserAgentCleanup,
 } from './metrics.js';
-import { bufferTelemetryEvent } from './sdk.js';
+import { bufferTelemetryEvent } from './telemetryBuffer.js';
 import { uiTelemetryService, type UiEvent } from './uiTelemetry.js';
 import { ClearcutLogger } from './clearcut-logger/clearcut-logger.js';
 import { debugLogger } from '../utils/debugLogger.js';
@@ -153,7 +153,7 @@ export function logToolCall(config: Config, event: ToolCallEvent): void {
       attributes: event.toOpenTelemetryAttributes(config),
     };
     logger.emit(logRecord);
-    recordToolCallMetrics(config, event.duration_ms, {
+    void recordToolCallMetrics(config, event.duration_ms, {
       function_name: event.function_name,
       success: event.success,
       decision: event.decision,
@@ -164,14 +164,14 @@ export function logToolCall(config: Config, event: ToolCallEvent): void {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const added = event.metadata['model_added_lines'];
       if (typeof added === 'number' && added > 0) {
-        recordLinesChanged(config, added, 'added', {
+        void recordLinesChanged(config, added, 'added', {
           function_name: event.function_name,
         });
       }
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const removed = event.metadata['model_removed_lines'];
       if (typeof removed === 'number' && removed > 0) {
-        recordLinesChanged(config, removed, 'removed', {
+        void recordLinesChanged(config, removed, 'removed', {
           function_name: event.function_name,
         });
       }
@@ -222,7 +222,7 @@ export function logFileOperation(
     };
     logger.emit(logRecord);
 
-    recordFileOperationMetric(config, {
+    void recordFileOperationMetric(config, {
       operation: event.operation,
       lines: event.lines,
       mimetype: event.mimetype,
@@ -286,14 +286,14 @@ export function logApiError(config: Config, event: ApiErrorEvent): void {
     logger.emit(event.toLogRecord(config));
     logger.emit(event.toSemanticLogRecord(config));
 
-    recordApiErrorMetrics(config, event.duration_ms, {
+    void recordApiErrorMetrics(config, event.duration_ms, {
       model: event.model,
       status_code: event.status_code,
       error_type: event.error_type,
     });
 
     // Record GenAI operation duration for errors
-    recordApiResponseMetrics(config, event.duration_ms, {
+    void recordApiResponseMetrics(config, event.duration_ms, {
       model: event.model,
       status_code: event.status_code,
       genAiAttributes: {
@@ -321,7 +321,7 @@ export function logApiResponse(config: Config, event: ApiResponseEvent): void {
 
     const conventionAttributes = getConventionAttributes(event);
 
-    recordApiResponseMetrics(config, event.duration_ms, {
+    void recordApiResponseMetrics(config, event.duration_ms, {
       model: event.model,
       status_code: event.status_code,
       genAiAttributes: conventionAttributes,
@@ -336,7 +336,7 @@ export function logApiResponse(config: Config, event: ApiResponseEvent): void {
     ];
 
     for (const { count, type } of tokenUsageData) {
-      recordTokenUsageMetrics(config, count, {
+      void recordTokenUsageMetrics(config, count, {
         model: event.model,
         type,
         genAiAttributes: conventionAttributes,
@@ -468,7 +468,7 @@ export function logChatCompression(
   };
   logger.emit(logRecord);
 
-  recordChatCompressionMetrics(config, {
+  void recordChatCompressionMetrics(config, {
     tokens_before: event.tokens_before,
     tokens_after: event.tokens_after,
   });
@@ -501,7 +501,7 @@ export function logInvalidChunk(
       attributes: event.toOpenTelemetryAttributes(config),
     };
     logger.emit(logRecord);
-    recordInvalidChunk(config);
+    void recordInvalidChunk(config);
   });
 }
 
@@ -517,7 +517,7 @@ export function logNetworkRetryAttempt(
       attributes: event.toOpenTelemetryAttributes(config),
     };
     logger.emit(logRecord);
-    recordRetryAttemptMetrics(config, {
+    void recordRetryAttemptMetrics(config, {
       model: event.model,
       attempt: event.attempt,
     });
@@ -536,7 +536,7 @@ export function logContentRetry(
       attributes: event.toOpenTelemetryAttributes(config),
     };
     logger.emit(logRecord);
-    recordContentRetry(config);
+    void recordContentRetry(config);
   });
 }
 
@@ -552,7 +552,7 @@ export function logContentRetryFailure(
       attributes: event.toOpenTelemetryAttributes(config),
     };
     logger.emit(logRecord);
-    recordContentRetryFailure(config);
+    void recordContentRetryFailure(config);
   });
 }
 
@@ -568,7 +568,7 @@ export function logModelRouting(
       attributes: event.toOpenTelemetryAttributes(config),
     };
     logger.emit(logRecord);
-    recordModelRoutingMetrics(config, event);
+    void recordModelRoutingMetrics(config, event);
   });
 }
 
@@ -584,7 +584,7 @@ export function logModelSlashCommand(
       attributes: event.toOpenTelemetryAttributes(config),
     };
     logger.emit(logRecord);
-    recordModelSlashCommand(config, event);
+    void recordModelSlashCommand(config, event);
   });
 }
 
@@ -715,7 +715,7 @@ export function logAgentFinish(config: Config, event: AgentFinishEvent): void {
     };
     logger.emit(logRecord);
 
-    recordAgentRunMetrics(config, event);
+    void recordAgentRunMetrics(config, event);
   });
 }
 
@@ -732,7 +732,7 @@ export function logRecoveryAttempt(
     };
     logger.emit(logRecord);
 
-    recordRecoveryAttemptMetrics(config, event);
+    void recordRecoveryAttemptMetrics(config, event);
   });
 }
 
@@ -800,7 +800,7 @@ export function logPlanExecution(config: Config, event: PlanExecutionEvent) {
       attributes: event.toOpenTelemetryAttributes(config),
     });
 
-    recordPlanExecution(config, {
+    void recordPlanExecution(config, {
       approval_mode: event.approval_mode,
     });
   });
@@ -816,7 +816,7 @@ export function logHookCall(config: Config, event: HookCallEvent): void {
     };
     logger.emit(logRecord);
 
-    recordHookCallMetrics(
+    void recordHookCallMetrics(
       config,
       event.hook_event_name,
       event.hook_name,
@@ -862,7 +862,7 @@ export function logKeychainAvailability(
     };
     logger.emit(logRecord);
 
-    recordKeychainAvailability(config, event);
+    void recordKeychainAvailability(config, event);
   });
 }
 
@@ -879,7 +879,7 @@ export function logTokenStorageInitialization(
     };
     logger.emit(logRecord);
 
-    recordTokenStorageInitialization(config, event);
+    void recordTokenStorageInitialization(config, event);
   });
 }
 
@@ -896,7 +896,7 @@ export function logOnboardingStart(
     };
     logger.emit(logRecord);
 
-    recordOnboardingStart(config);
+    void recordOnboardingStart(config);
   });
 }
 
@@ -913,7 +913,7 @@ export function logOnboardingSuccess(
     };
     logger.emit(logRecord);
 
-    recordOnboardingSuccess(config, event.userTier, event.duration_ms);
+    void recordOnboardingSuccess(config, event.userTier, event.duration_ms);
   });
 }
 
@@ -972,7 +972,7 @@ export function logBrowserAgentConnection(
     tool_count: attributes.tool_count,
   });
 
-  recordBrowserAgentConnection(config, durationMs, attributes);
+  void recordBrowserAgentConnection(config, durationMs, attributes);
 }
 
 export function logBrowserAgentVisionStatus(
@@ -990,7 +990,7 @@ export function logBrowserAgentVisionStatus(
     disabled_reason: attributes.disabled_reason,
   });
 
-  recordBrowserAgentVisionStatus(config, attributes);
+  void recordBrowserAgentVisionStatus(config, attributes);
 }
 
 export function logBrowserAgentTaskOutcome(
@@ -1011,7 +1011,7 @@ export function logBrowserAgentTaskOutcome(
     duration_ms: attributes.duration_ms,
   });
 
-  recordBrowserAgentTaskOutcome(config, attributes);
+  void recordBrowserAgentTaskOutcome(config, attributes);
 }
 
 export function logBrowserAgentCleanup(
@@ -1028,5 +1028,5 @@ export function logBrowserAgentCleanup(
     duration_ms: durationMs,
   });
 
-  recordBrowserAgentCleanup(config, durationMs, attributes);
+  void recordBrowserAgentCleanup(config, durationMs, attributes);
 }

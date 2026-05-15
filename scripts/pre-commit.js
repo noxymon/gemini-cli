@@ -14,8 +14,22 @@ try {
   // Run lint-staged with API directly
   const passed = await lintStaged({ cwd: root });
 
+  if (!passed) {
+    process.exit(1);
+  }
+
+  // Run dead code and dependency audits
+  console.log('Running dead code and dependency audits...');
+  try {
+    execSync('npm run dead-code:exports', { stdio: 'inherit', cwd: root });
+    execSync('npm run dead-code:deps', { stdio: 'inherit', cwd: root });
+  } catch {
+    console.error('Dead code or dependency audit failed.');
+    process.exit(1);
+  }
+
   // Exit with appropriate code
-  process.exit(passed ? 0 : 1);
+  process.exit(0);
 } catch {
   // Exit with error code
   process.exit(1);

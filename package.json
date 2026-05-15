@@ -1,6 +1,6 @@
 {
   "name": "@google/gemini-cli",
-  "version": "0.44.2-NXY",
+  "version": "0.44.5-NXY",
   "engines": {
     "node": ">=20.0.0"
   },
@@ -14,7 +14,7 @@
     "url": "git+https://github.com/google-gemini/gemini-cli.git"
   },
   "config": {
-    "sandboxImageUri": "us-docker.pkg.dev/gemini-code-dev/gemini-cli/sandbox:0.44.2-NXY"
+    "sandboxImageUri": "us-docker.pkg.dev/gemini-code-dev/gemini-cli/sandbox:0.44.5-NXY"
   },
   "scripts": {
     "start": "cross-env NODE_ENV=development node scripts/start.js",
@@ -71,6 +71,8 @@
     "telemetry": "node scripts/telemetry.js",
     "check:lockfile": "node scripts/check-lockfile.js",
     "clean": "node scripts/clean.js",
+    "dead-code:exports": "ts-prune",
+    "dead-code:deps": "depcheck",
     "rebuild-and-install": "node scripts/rebuild-and-install.js",
     "pre-commit": "node scripts/pre-commit.js"
   },

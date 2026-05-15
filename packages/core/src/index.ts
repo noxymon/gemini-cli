@@ -264,6 +264,11 @@ export { OAuthUtils } from './mcp/oauth-utils.js';
 
 // Export telemetry functions
 export * from './telemetry/index.js';
+export {
+  initializeTelemetry,
+  shutdownTelemetry,
+  flushTelemetry,
+} from './telemetry/sdk.js';
 export * from './telemetry/billingEvents.js';
 export { logBillingEvent } from './telemetry/loggers.js';
 export * from './telemetry/constants.js';

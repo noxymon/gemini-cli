@@ -59,6 +59,7 @@ describe('ShellTool Integration', () => {
   });
 
   it('should run simple cross-platform command successfully', async () => {
+    const invocation = shellTool.build({ command: 'echo "ok"' });
     const result = await invocation.execute({
       abortSignal: new AbortController().signal,
     });

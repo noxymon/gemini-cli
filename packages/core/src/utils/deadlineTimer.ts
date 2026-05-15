@@ -82,7 +82,13 @@ export class DeadlineTimer {
       this.timeoutId = null;
     }
     this.isPaused = false;
-    this.controller.abort(reason);
+    if (!this.controller.signal.aborted) {
+      try {
+        this.controller.abort(reason);
+      } catch {
+        // Ignore errors during abort to prevent crashing the process
+      }
+    }
   }
 
   private schedule(ms: number, reason: string): void {

@@ -6,16 +6,25 @@
 
 import type { Attributes } from '@opentelemetry/api';
 import type { Config } from '../config/config.js';
-import { InstallationManager } from '../utils/installationManager.js';
 import { UserAccountManager } from '../utils/userAccountManager.js';
 
 const userAccountManager = new UserAccountManager();
-const installationManager = new InstallationManager();
+let installationManager:
+  | import('../utils/installationManager.js').InstallationManager
+  | undefined = undefined;
 
-export function getCommonAttributes(config: Config): Attributes {
+export async function getCommonAttributes(config: Config): Promise<Attributes> {
   const email = userAccountManager.getCachedGoogleAccount();
   const experiments = config.getExperiments();
   const authType = config.getContentGeneratorConfig()?.authType;
+
+  if (!installationManager) {
+    const { InstallationManager } = await import(
+      '../utils/installationManager.js'
+    );
+    installationManager = new InstallationManager();
+  }
+
   return {
     'session.id': config.getSessionId(),
     'installation.id': installationManager.getInstallationId(),
