@@ -10,6 +10,7 @@ import { FakeContentGenerator } from '../core/fakeContentGenerator.js';
 import { Config } from '../config/config.js';
 import { RetryableQuotaError } from '../utils/googleQuotaErrors.js';
 import {
+  DEFAULT_GEMINI_MODEL,
   PREVIEW_GEMINI_MODEL,
   PREVIEW_GEMINI_FLASH_MODEL,
   PREVIEW_GEMINI_MODEL_AUTO,
@@ -19,6 +20,7 @@ import { AuthType } from '../core/contentGenerator.js';
 import type { FallbackIntent } from '../fallback/types.js';
 import { LlmRole } from '../telemetry/types.js';
 import type { GenerateContentResponse } from '@google/genai';
+import type { LocalLiteRtLmClient } from '../core/localLiteRtLmClient.js';
 
 vi.mock('node:fs');
 
@@ -409,6 +411,130 @@ describe('Auto Routing Fallback Integration', () => {
     const result2 = await promise2;
     expect(result2.candidates?.[0]?.content?.parts?.[0]?.text).toBe(
       'Pro success',
+    );
+  });
+
+  // Regression test for the local-gemma quota-aware fallback bug:
+  // In auto-gemini-3 mode, when Pro is quota-exhausted and the local gemma
+  // router is enabled, the CLI must consult local gemma to pick the next
+  // model instead of silently falling back to gemini-3-flash-preview.
+  it('consults local gemma to pick the next model when Pro quota is exhausted in auto mode', async () => {
+    config = new Config({
+      sessionId: 'test-session',
+      targetDir: '/test',
+      debugMode: false,
+      cwd: '/test',
+      model: PREVIEW_GEMINI_MODEL_AUTO,
+    });
+
+    vi.spyOn(config, 'isInteractive').mockReturnValue(true);
+
+    // User has the local gemma router enabled and running.
+    vi.spyOn(config, 'getGemmaModelRouterSettings').mockReturnValue({
+      enabled: true,
+      classifier: {
+        host: 'http://localhost:9379',
+        model: 'gemma3-1b-gpu-custom',
+      },
+    });
+
+    // Mock the local gemma client. We expect the fallback path to call
+    // `chooseFallbackModel` and use its decision. Returning a non-default
+    // candidate (gemini-2.5-pro) instead of the hardcoded flash makes the
+    // assertion unambiguous: only a real gemma consultation could land here.
+    const chooseFallbackModel = vi.fn().mockResolvedValue({
+      chosen: DEFAULT_GEMINI_MODEL,
+      reasoning: 'still-available alternative on a separate quota bucket',
+    });
+    const fakeLocalClient = {
+      chooseFallbackModel,
+      generateJson: vi.fn(),
+    } as unknown as LocalLiteRtLmClient;
+    vi.spyOn(config, 'getLocalLiteRtLmClient').mockReturnValue(fakeLocalClient);
+
+    client = new BaseLlmClient(
+      fakeGenerator,
+      config,
+      AuthType.LOGIN_WITH_GOOGLE,
+    );
+
+    let attemptsPro = 0;
+    let attemptsGemini25 = 0;
+    let attemptsFlash = 0;
+
+    const mockGoogleApiError = {
+      code: 429,
+      message: 'Quota exceeded',
+      details: [],
+    };
+
+    vi.spyOn(fakeGenerator, 'generateContent').mockImplementation(
+      async (params) => {
+        if (params.model === PREVIEW_GEMINI_MODEL) {
+          attemptsPro++;
+          throw new RetryableQuotaError(
+            'Quota exceeded for Pro',
+            mockGoogleApiError,
+            0,
+          );
+        }
+        if (params.model === DEFAULT_GEMINI_MODEL) {
+          attemptsGemini25++;
+          return {
+            candidates: [
+              {
+                content: {
+                  role: 'model',
+                  parts: [{ text: 'gemini-2.5-pro success' }],
+                },
+              },
+            ],
+          } as unknown as GenerateContentResponse;
+        }
+        if (params.model === PREVIEW_GEMINI_FLASH_MODEL) {
+          attemptsFlash++;
+          // Flash is intentionally healthy. If the CLI lands here it means
+          // it ignored the local gemma router and walked the hardcoded chain.
+          return {
+            candidates: [
+              {
+                content: { role: 'model', parts: [{ text: 'flash fallback' }] },
+              },
+            ],
+          } as unknown as GenerateContentResponse;
+        }
+        throw new Error(`Unexpected model: ${params.model}`);
+      },
+    );
+
+    // Approve any prompt-driven fallback transition so the chain can advance.
+    config.setFallbackModelHandler(
+      async (_failed, _fallback, _error): Promise<FallbackIntent | null> =>
+        'retry_always',
+    );
+
+    const promise = client.generateContent({
+      modelConfigKey: { model: PREVIEW_GEMINI_MODEL, isChatModel: true },
+      contents: [{ role: 'user', parts: [{ text: 'plan a refactor' }] }],
+      abortSignal: new AbortController().signal,
+      promptId: 'test-prompt',
+      role: LlmRole.UTILITY_TOOL,
+    });
+
+    await vi.runAllTimersAsync();
+    const result = await promise;
+
+    // Core regression assertions:
+    // 1. Pro is tried 3 times and exhausted (existing auto-mode behavior).
+    expect(attemptsPro).toBe(3);
+    // 2. The local gemma router was consulted to pick the next model.
+    expect(chooseFallbackModel).toHaveBeenCalled();
+    // 3. The CLI honored gemma's choice (gemini-2.5-pro), not the hardcoded
+    //    next chain entry (gemini-3-flash-preview).
+    expect(attemptsGemini25).toBe(1);
+    expect(attemptsFlash).toBe(0);
+    expect(result.candidates?.[0]?.content?.parts?.[0]?.text).toBe(
+      'gemini-2.5-pro success',
     );
   });
 });
