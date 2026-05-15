@@ -22,13 +22,13 @@ import * as util from 'node:util';
  */
 class DebugLogger {
   private logStream: fs.WriteStream | undefined;
-
   constructor() {
-    this.logStream = process.env['GEMINI_DEBUG_LOG_FILE']
-      ? fs.createWriteStream(process.env['GEMINI_DEBUG_LOG_FILE'], {
-          flags: 'a',
-        })
-      : undefined;
+    const logFile = process.env['GEMINI_DEBUG_LOG_FILE'] || 'debug.log';
+    this.logStream = fs.createWriteStream(logFile, {
+      flags: 'a',
+    });
+    // ...
+
     // Handle potential errors with the stream
     this.logStream?.on('error', (err) => {
       // Log to console as a fallback, but don't crash the app

@@ -973,8 +973,9 @@ export class ShellExecutionService {
       const lineContent = line.translateToString(trimRight);
 
       if (line.isWrapped && entry.accumulatedOutputChunks.length > 0) {
-        entry.accumulatedOutputChunks[entry.accumulatedOutputChunks.length - 1] +=
-          lineContent;
+        entry.accumulatedOutputChunks[
+          entry.accumulatedOutputChunks.length - 1
+        ] += lineContent;
       } else {
         entry.accumulatedOutputChunks.push(lineContent);
       }
@@ -1552,7 +1553,7 @@ export class ShellExecutionService {
           0,
         );
         this.backgroundLogSizes.set(pid, bytesWritten);
-        const output = activeChild.state.output;
+        const output = activeChild?.state.output;
         if (output) {
           const stripped = stripAnsi(output) + '\n';
           stream.write(stripped);

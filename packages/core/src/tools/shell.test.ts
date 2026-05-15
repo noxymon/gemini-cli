@@ -150,6 +150,7 @@ describe('ShellTool', () => {
       getShellBackgroundCompletionBehavior: vi.fn().mockReturnValue('silent'),
       getEnableShellOutputEfficiency: vi.fn().mockReturnValue(true),
       getSandboxEnabled: vi.fn().mockReturnValue(false),
+      getEnableWindowsBash: vi.fn().mockReturnValue(false),
       sanitizationConfig: {},
       get sandboxManager() {
         return mockSandboxManager;

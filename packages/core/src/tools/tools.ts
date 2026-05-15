@@ -22,7 +22,7 @@ import {
 } from '../confirmation-bus/types.js';
 import { ApprovalMode } from '../policy/types.js';
 import type { SubagentProgress } from '../agents/types.js';
-import type { DisplayFooter } from '../agent/types.js';
+import type { DisplayFooter , ToolDisplay } from '../agent/types.js';
 
 /**
 /**
@@ -774,6 +774,11 @@ export interface ToolResult {
   data?: Record<string, unknown>;
 
   /**
+   * Optional exit code for shell or process-based tools.
+   */
+  exitCode?: number | null;
+
+  /**
    * Optional status line displayed beneath the tool's result in the UI.
    * Used by enrichment layers (e.g. LSP diagnostics) to surface a summary
    * alongside the tool's primary output. Propagated onto the
@@ -1097,7 +1102,6 @@ export type ToolCallConfirmationDetails =
   | ToolAskUserConfirmationDetails
   | ToolExitPlanModeConfirmationDetails;
 
-import type { ToolDisplay } from '../agent/types.js';
 export type { ToolDisplay };
 
 export enum ToolConfirmationOutcome {

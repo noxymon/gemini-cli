@@ -217,8 +217,8 @@ ${result.llmContent}`;
         result: {
           type: 'text',
           text: result.returnDisplay || '',
-          footer: displayFooter,
         },
+        footer: displayFooter,
       },
       returnDisplay: result.returnDisplay || '',
       displayFooter,

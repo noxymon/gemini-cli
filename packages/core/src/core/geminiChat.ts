@@ -60,7 +60,6 @@ import {
 import { coreEvents } from '../utils/events.js';
 import { debugLogger } from '../utils/debugLogger.js';
 import type { AgentLoopContext } from '../config/agent-loop-context.js';
-import { debugLogger } from '../utils/debugLogger.js';
 
 export enum StreamEventType {
   /** A regular content chunk from the API. */

@@ -13,11 +13,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
 
-describe('LspQueryTool Integration', () => {
+describe('lsp_query tool', () => {
   const bus = createMockMessageBus();
   let tempRootDir: string;
-  let mockConfig: Record<string, unknown>;
-  let mockLspManager: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockConfig: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockLspManager: any;
 
   beforeEach(() => {
     tempRootDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lsp-query-test-'));

@@ -21,6 +21,7 @@ import {
   ShellExecutionService,
   type ShellOutputEvent,
   type ShellExecutionConfig,
+  MAX_CHILD_PROCESS_BUFFER_SIZE,
 } from './shellExecutionService.js';
 import { NoopSandboxManager } from './sandboxManager.js';
 import { ExecutionLifecycleService } from './executionLifecycleService.js';
@@ -2202,8 +2203,7 @@ describe('background method', () => {
   it('should write to the log stream', () => {
     const pid = 12345;
     const state = {
-      outputChunks: ['hello world'],
-      outputLength: 11,
+      output: 'hello world',
       truncated: false,
       binaryBytesReceived: 0,
       sniffChunks: [],
@@ -2273,7 +2273,8 @@ describe('H2 shellExecutionService buffering optimizations', () => {
 
     onOutputEventMock = vi.fn();
 
-    mockChildProcess = new EventEmitter() as EventEmitter & Partial<ChildProcess>;
+    mockChildProcess = new EventEmitter() as EventEmitter &
+      Partial<ChildProcess>;
     mockChildProcess.stdout = new EventEmitter() as Readable;
     mockChildProcess.stderr = new EventEmitter() as Readable;
     mockChildProcess.kill = vi.fn();
@@ -2405,8 +2406,8 @@ describe('H2 shellExecutionService buffering optimizations', () => {
 
       expect(result.output).toContain('[GEMINI_CLI_WARNING: Output truncated');
       const withoutWarning = result.output
-          .substring(0, result.output.indexOf('[GEMINI_CLI_WARNING'))
-          .trimEnd();
+        .substring(0, result.output.indexOf('[GEMINI_CLI_WARNING'))
+        .trimEnd();
       expect(withoutWarning.length).toBe(MAX_CHILD_PROCESS_BUFFER_SIZE);
     }, 30000);
   });
@@ -2517,7 +2518,9 @@ describe('H2 shellExecutionService buffering optimizations', () => {
       // Second update with no new data should not change anything
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (ShellExecutionService as any).updateActivePtyOutputCache(activePty);
-      expect(activePty.accumulatedOutputChunks.length).toBe(lineCountAfterFirst);
+      expect(activePty.accumulatedOutputChunks.length).toBe(
+        lineCountAfterFirst,
+      );
       expect(activePty.lastProcessedLine).toBe(processedAfterFirst);
 
       mockPtyProcessH2.onExit.mock.calls[0][0]({ exitCode: 0, signal: null });
@@ -2561,7 +2564,19 @@ describe('H2 shellExecutionService buffering optimizations', () => {
     it('should emit data event after output arrives with disableDynamicLineTrimming: false', async () => {
       const config = { ...h2Config, disableDynamicLineTrimming: false };
       mockSerializeTerminalToObject.mockReturnValue([
-        [{ text: 'output line', fg: '', bg: '', bold: false, italic: false, underline: false, dim: false, inverse: false, isUninitialized: false }],
+        [
+          {
+            text: 'output line',
+            fg: '',
+            bg: '',
+            bold: false,
+            italic: false,
+            underline: false,
+            dim: false,
+            inverse: false,
+            isUninitialized: false,
+          },
+        ],
       ]);
       const abortController = new AbortController();
       const handle = await ShellExecutionService.execute(

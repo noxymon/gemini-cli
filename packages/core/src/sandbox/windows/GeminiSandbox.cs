@@ -373,8 +373,19 @@ public class GeminiSandbox {
             uint creationFlags = 0x01000000 | 0x00000004;
             if (!CreateProcessAsUser(hRestrictedToken, null, commandLine, IntPtr.Zero, IntPtr.Zero, true, creationFlags, IntPtr.Zero, cwd, ref si, out pi)) {
                 int err = Marshal.GetLastWin32Error();
-                Console.Error.WriteLine("Error: CreateProcessAsUser failed (" + err + ") Command: " + commandLine);
-                return 1;
+                // If we get ERROR_ACCESS_DENIED (5), it's likely because we're already in a job that doesn't allow breakaway.
+                // In that case, we retry without the breakaway flag.
+                if (err == 5) {
+                    creationFlags = 0x00000004; // Just CREATE_SUSPENDED
+                    if (!CreateProcessAsUser(hRestrictedToken, null, commandLine, IntPtr.Zero, IntPtr.Zero, true, creationFlags, IntPtr.Zero, cwd, ref si, out pi)) {
+                        err = Marshal.GetLastWin32Error();
+                        Console.Error.WriteLine("Error: CreateProcessAsUser failed (" + err + ") even without breakaway. Command: " + commandLine);
+                        return 1;
+                    }
+                } else {
+                    Console.Error.WriteLine("Error: CreateProcessAsUser failed (" + err + ") Command: " + commandLine);
+                    return 1;
+                }
             }
 
             if (!AssignProcessToJobObject(hJob, pi.hProcess)) {

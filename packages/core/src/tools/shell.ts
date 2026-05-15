@@ -27,14 +27,7 @@ import {
 } from './tools.js';
 
 import { getErrorMessage } from '../utils/errors.js';
-import { summarizeToolOutput } from '../utils/summarizer.js';
-import {
-  ShellExecutionService,
-  type ShellOutputEvent,
-} from '../services/shellExecutionService.js';
-import { formatBytes } from '../utils/formatters.js';
-import type { AnsiOutput } from '../utils/terminalSerializer.js';
-import {
+import { resolveBashOnPath ,
   getCommandRoots,
   initializeShellParsers,
   stripShellWrapper,
@@ -44,6 +37,13 @@ import {
   normalizeCommand,
   escapeShellArg,
 } from '../utils/shell-utils.js';
+import { summarizeToolOutput } from '../utils/summarizer.js';
+import {
+  ShellExecutionService,
+  type ShellOutputEvent,
+} from '../services/shellExecutionService.js';
+import { formatBytes } from '../utils/formatters.js';
+import type { AnsiOutput } from '../utils/terminalSerializer.js';
 import { SHELL_TOOL_NAME } from './tool-names.js';
 import { PARAM_ADDITIONAL_PERMISSIONS } from './definitions/base-declarations.js';
 import { ApprovalMode } from '../policy/types.js';
@@ -102,8 +102,9 @@ export class ShellToolInvocation extends BaseToolInvocation<
     command: string,
     tempFilePath: string,
     isWindows: boolean,
+    useWindowsBash: boolean,
   ): string {
-    if (isWindows) {
+    if (isWindows && !useWindowsBash) {
       return command;
     }
     let trimmed = command.trim();
@@ -480,11 +481,17 @@ export class ShellToolInvocation extends BaseToolInvocation<
       tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gemini-shell-'));
       tempFilePath = path.join(tempDir, 'pgrep.tmp');
 
+      const useWindowsBash =
+        isWindows &&
+        !!this.context.config.getEnableWindowsBash?.() &&
+        !!(await resolveBashOnPath());
+
       // pgrep is not available on Windows, so we can't get background PIDs
       const commandToExecute = this.wrapCommandForPgrep(
         strippedCommand,
         tempFilePath,
         isWindows,
+        useWindowsBash,
       );
 
       const cwd = this.params.dir_path
@@ -984,6 +991,7 @@ export class ShellToolInvocation extends BaseToolInvocation<
         },
         returnDisplay,
         data,
+        exitCode: result.exitCode,
         ...executionError,
       };
     } finally {

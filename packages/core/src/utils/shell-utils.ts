@@ -782,7 +782,19 @@ function resolveGitForWindowsBash(): string | undefined {
       const match = /InstallPath\s+REG_SZ\s+(.+)/i.exec(result.stdout);
       if (match) {
         const candidate = path.join(match[1].trim(), 'bin', 'bash.exe');
-        if (fs.existsSync(candidate)) return candidate;
+        if (fs.existsSync(candidate)) {
+          const testRun = spawnSync(candidate, ['-c', 'echo 1'], {
+            timeout: 1000,
+            encoding: 'utf8',
+          });
+          if (
+            testRun.status === 0 &&
+            testRun.stdout &&
+            testRun.stdout.trim() === '1'
+          ) {
+            return candidate;
+          }
+        }
       }
     }
   } catch {
@@ -812,7 +824,19 @@ function resolveGitForWindowsBash(): string | undefined {
     ),
   ];
   for (const candidate of probes) {
-    if (candidate && fs.existsSync(candidate)) return candidate;
+    if (candidate && fs.existsSync(candidate)) {
+      const testRun = spawnSync(candidate, ['-c', 'echo 1'], {
+        timeout: 1000,
+        encoding: 'utf8',
+      });
+      if (
+        testRun.status === 0 &&
+        testRun.stdout &&
+        testRun.stdout.trim() === '1'
+      ) {
+        return candidate;
+      }
+    }
   }
 
   return undefined;
@@ -823,6 +847,7 @@ function getWslBashPaths(): Set<string> {
   if (os.platform() !== 'win32') return stubs;
   const systemRoot = process.env['SystemRoot'] ?? 'C:\\Windows';
   stubs.add(path.join(systemRoot, 'System32', 'bash.exe').toLowerCase());
+  stubs.add(path.join(systemRoot, 'Sysnative', 'bash.exe').toLowerCase());
   const localAppData = process.env['LOCALAPPDATA'];
   if (localAppData) {
     stubs.add(
@@ -847,8 +872,18 @@ export async function resolveBashOnPath(): Promise<string | undefined> {
     if (wslStubs.has(candidate.toLowerCase())) continue;
     try {
       await fs.promises.access(candidate, fs.constants.X_OK);
-      cachedBashPath = candidate;
-      return candidate;
+      const testRun = spawnSync(candidate, ['-c', 'echo 1'], {
+        timeout: 1000,
+        encoding: 'utf8',
+      });
+      if (
+        testRun.status === 0 &&
+        testRun.stdout &&
+        testRun.stdout.trim() === '1'
+      ) {
+        cachedBashPath = candidate;
+        return candidate;
+      }
     } catch {
       continue;
     }
