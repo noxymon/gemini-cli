@@ -9,25 +9,43 @@ import type { Config } from '../config/config.js';
 import { UserAccountManager } from '../utils/userAccountManager.js';
 
 const userAccountManager = new UserAccountManager();
-let installationManager:
-  | import('../utils/installationManager.js').InstallationManager
-  | undefined = undefined;
+let installationId: string | undefined = undefined;
+let isInitialized = false;
 
-export async function getCommonAttributes(config: Config): Promise<Attributes> {
+/**
+ * Initializes common attributes asynchronously.
+ * This should be called and awaited during telemetry startup.
+ */
+export async function initializeCommonAttributes(): Promise<void> {
+  if (isInitialized) return;
+
+  try {
+    const { InstallationManager } = await import(
+      '../utils/installationManager.js'
+    );
+    const installationManager = new InstallationManager();
+    installationId = installationManager.getInstallationId();
+    isInitialized = true;
+  } catch (error) {
+    // Fallback if installation manager fails to load
+    installationId = 'unknown';
+    isInitialized = true;
+  }
+}
+
+/**
+ * Returns common telemetry attributes synchronously.
+ * Note: Some attributes like installation ID might be missing if 
+ * initializeCommonAttributes() hasn't completed yet.
+ */
+export function getCommonAttributes(config: Config): Attributes {
   const email = userAccountManager.getCachedGoogleAccount();
   const experiments = config.getExperiments();
   const authType = config.getContentGeneratorConfig()?.authType;
 
-  if (!installationManager) {
-    const { InstallationManager } = await import(
-      '../utils/installationManager.js'
-    );
-    installationManager = new InstallationManager();
-  }
-
   return {
     'session.id': config.getSessionId(),
-    'installation.id': installationManager.getInstallationId(),
+    ...(installationId && { 'installation.id': installationId }),
     interactive: config.isInteractive(),
     ...(email && { 'user.email': email }),
     ...(authType && { auth_type: authType }),

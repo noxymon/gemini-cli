@@ -13,7 +13,13 @@ const DEFAULT_TELEMETRY_TARGET = TelemetryTarget.LOCAL;
 const DEFAULT_OTLP_ENDPOINT = 'http://localhost:4317';
 
 export { DEFAULT_TELEMETRY_TARGET, DEFAULT_OTLP_ENDPOINT };
-export { isTelemetrySdkInitialized } from './sdk.js';
+export {
+  isTelemetrySdkInitialized,
+  initializeTelemetry,
+  flushTelemetry,
+  shutdownTelemetry,
+  bufferTelemetryEvent,
+} from './sdk.js';
 export {
   resolveTelemetrySettings,
   parseBooleanEnvFlag,

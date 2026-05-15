@@ -857,9 +857,8 @@ export function initializeMetrics(config: Config): void {
   );
 
   // Increment session counter after all metrics are initialized
-  void baseMetricDefinition.getCommonAttributes(config).then((attrs) => {
-    sessionCounter?.add(1, attrs);
-  });
+  const attrs = baseMetricDefinition.getCommonAttributes(config);
+  sessionCounter?.add(1, attrs);
 
   // Initialize performance monitoring metrics if enabled
   initializePerformanceMonitoring(config);
@@ -872,7 +871,7 @@ export async function recordChatCompressionMetrics(
   attributes: MetricDefinitions[typeof EVENT_CHAT_COMPRESSION]['attributes'],
 ) {
   if (!chatCompressionCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   chatCompressionCounter.add(1, {
     ...commonAttrs,
     ...attributes,
@@ -887,7 +886,7 @@ export async function recordToolCallMetrics(
   if (!toolCallCounter || !toolCallLatencyHistogram || !isMetricsInitialized)
     return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     ...attributes,
@@ -905,7 +904,7 @@ export async function recordCustomTokenUsageMetrics(
   attributes: MetricDefinitions[typeof TOKEN_USAGE]['attributes'],
 ): Promise<void> {
   if (!tokenUsageCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   tokenUsageCounter.add(tokenCount, {
     ...commonAttrs,
     ...attributes,
@@ -923,7 +922,7 @@ export async function recordCustomApiResponseMetrics(
     !isMetricsInitialized
   )
     return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     model: attributes.model,
@@ -947,7 +946,7 @@ export async function recordApiErrorMetrics(
     !isMetricsInitialized
   )
     return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     model: attributes.model,
@@ -966,7 +965,7 @@ export async function recordFileOperationMetric(
   attributes: MetricDefinitions[typeof FILE_OPERATION_COUNT]['attributes'],
 ): Promise<void> {
   if (!fileOperationCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   fileOperationCounter.add(1, {
     ...commonAttrs,
     ...attributes,
@@ -981,7 +980,7 @@ export async function recordLinesChanged(
 ): Promise<void> {
   if (!linesChangedCounter || !isMetricsInitialized) return;
   if (!Number.isFinite(lines) || lines <= 0) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   linesChangedCounter.add(lines, {
     ...commonAttrs,
     type: changeType,
@@ -996,7 +995,7 @@ export async function recordLinesChanged(
  */
 export async function recordOnboardingStart(config: Config): Promise<void> {
   if (!onboardingStartCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   onboardingStartCounter.add(1, commonAttrs);
 }
 
@@ -1010,7 +1009,7 @@ export async function recordOnboardingSuccess(
 ): Promise<void> {
   if (!isMetricsInitialized) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const attributes: Attributes = {
     ...commonAttrs,
     ...(userTier && { user_tier: userTier }),
@@ -1030,7 +1029,7 @@ export async function recordOnboardingSuccess(
  */
 export async function recordFlickerFrame(config: Config): Promise<void> {
   if (!flickerFrameCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   flickerFrameCounter.add(1, commonAttrs);
 }
 
@@ -1039,7 +1038,7 @@ export async function recordFlickerFrame(config: Config): Promise<void> {
  */
 export async function recordExitFail(config: Config): Promise<void> {
   if (!exitFailCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   exitFailCounter.add(1, commonAttrs);
 }
 
@@ -1051,7 +1050,7 @@ export async function recordPlanExecution(
   attributes: MetricDefinitions[typeof PLAN_EXECUTION_COUNT]['attributes'],
 ): Promise<void> {
   if (!planExecutionCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   planExecutionCounter.add(1, {
     ...commonAttrs,
     ...attributes,
@@ -1066,7 +1065,7 @@ export async function recordSlowRender(
   renderLatency: number,
 ): Promise<void> {
   if (!slowRenderHistogram || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   slowRenderHistogram.record(renderLatency, {
     ...commonAttrs,
   });
@@ -1077,7 +1076,7 @@ export async function recordSlowRender(
  */
 export async function recordInvalidChunk(config: Config): Promise<void> {
   if (!invalidChunkCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   invalidChunkCounter.add(1, commonAttrs);
 }
 
@@ -1089,7 +1088,7 @@ export async function recordRetryAttemptMetrics(
   },
 ): Promise<void> {
   if (!networkRetryCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   networkRetryCounter.add(1, {
     ...commonAttrs,
     ...attributes,
@@ -1101,7 +1100,7 @@ export async function recordRetryAttemptMetrics(
  */
 export async function recordContentRetry(config: Config): Promise<void> {
   if (!contentRetryCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   contentRetryCounter.add(1, commonAttrs);
 }
 
@@ -1110,7 +1109,7 @@ export async function recordContentRetry(config: Config): Promise<void> {
  */
 export async function recordContentRetryFailure(config: Config): Promise<void> {
   if (!contentRetryFailureCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   contentRetryFailureCounter.add(1, commonAttrs);
 }
 
@@ -1119,7 +1118,7 @@ export async function recordModelSlashCommand(
   event: ModelSlashCommandEvent,
 ): Promise<void> {
   if (!modelSlashCommandCallCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   modelSlashCommandCallCounter.add(1, {
     ...commonAttrs,
     'slash_command.model.model_name': event.model_name,
@@ -1137,7 +1136,7 @@ export async function recordModelRoutingMetrics(
   )
     return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const attributes: Attributes = {
     ...commonAttrs,
     'routing.decision_model': event.decision_model,
@@ -1194,7 +1193,7 @@ export async function recordAgentRunMetrics(
     return;
 
   const commonAttributes =
-    await baseMetricDefinition.getCommonAttributes(config);
+    baseMetricDefinition.getCommonAttributes(config);
 
   agentRunCounter.add(1, {
     ...commonAttributes,
@@ -1225,7 +1224,7 @@ export async function recordRecoveryAttemptMetrics(
     return;
 
   const commonAttributes =
-    await baseMetricDefinition.getCommonAttributes(config);
+    baseMetricDefinition.getCommonAttributes(config);
 
   agentRecoveryAttemptCounter.add(1, {
     ...commonAttributes,
@@ -1249,7 +1248,7 @@ export async function recordGenAiClientTokenUsage(
 ): Promise<void> {
   if (!genAiClientTokenUsageHistogram || !isMetricsInitialized) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     ...attributes,
@@ -1265,7 +1264,7 @@ export async function recordGenAiClientOperationDuration(
 ): Promise<void> {
   if (!genAiClientOperationDurationHistogram || !isMetricsInitialized) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     ...attributes,
@@ -1349,7 +1348,7 @@ export async function recordStartupPerformance(
 ): Promise<void> {
   if (!startupTimeHistogram || !isPerformanceMonitoringEnabled) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     phase: attributes.phase,
@@ -1366,7 +1365,7 @@ export async function recordMemoryUsage(
 ): Promise<void> {
   if (!memoryUsageGauge || !isPerformanceMonitoringEnabled) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     ...attributes,
@@ -1382,7 +1381,7 @@ export async function recordCpuUsage(
 ): Promise<void> {
   if (!cpuUsageGauge || !isPerformanceMonitoringEnabled) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     ...attributes,
@@ -1398,7 +1397,7 @@ export async function recordEventLoopDelay(
 ): Promise<void> {
   if (!eventLoopDelayHistogram || !isPerformanceMonitoringEnabled) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     ...attributes,
@@ -1413,7 +1412,7 @@ export async function recordToolQueueDepth(
 ): Promise<void> {
   if (!toolQueueDepthGauge || !isPerformanceMonitoringEnabled) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const attributes: Attributes = {
     ...commonAttrs,
   };
@@ -1429,7 +1428,7 @@ export async function recordToolExecutionBreakdown(
   if (!toolExecutionBreakdownHistogram || !isPerformanceMonitoringEnabled)
     return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     ...attributes,
@@ -1445,7 +1444,7 @@ export async function recordTokenEfficiency(
 ): Promise<void> {
   if (!tokenEfficiencyHistogram || !isPerformanceMonitoringEnabled) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     ...attributes,
@@ -1461,7 +1460,7 @@ export async function recordApiRequestBreakdown(
 ): Promise<void> {
   if (!apiRequestBreakdownHistogram || !isPerformanceMonitoringEnabled) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     ...attributes,
@@ -1477,7 +1476,7 @@ export async function recordPerformanceScore(
 ): Promise<void> {
   if (!performanceScoreGauge || !isPerformanceMonitoringEnabled) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     ...attributes,
@@ -1492,7 +1491,7 @@ export async function recordPerformanceRegression(
 ): Promise<void> {
   if (!regressionDetectionCounter || !isPerformanceMonitoringEnabled) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     ...attributes,
@@ -1527,7 +1526,7 @@ export async function recordBaselineComparison(
       attributes.baseline_value) *
     100;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     ...attributes,
@@ -1622,7 +1621,7 @@ export async function recordHookCallMetrics(
   // Always sanitize hook names in metrics (metrics are aggregated and exposed)
   const sanitizedHookName = sanitizeHookName(hookName);
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Attributes = {
     ...commonAttrs,
     hook_event_name: hookEventName,
@@ -1642,7 +1641,7 @@ export async function recordKeychainAvailability(
   event: KeychainAvailabilityEvent,
 ): Promise<void> {
   if (!keychainAvailabilityCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   keychainAvailabilityCounter.add(1, {
     ...commonAttrs,
     available: event.available,
@@ -1657,7 +1656,7 @@ export async function recordTokenStorageInitialization(
   event: TokenStorageInitializationEvent,
 ): Promise<void> {
   if (!tokenStorageTypeCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   tokenStorageTypeCounter.add(1, {
     ...commonAttrs,
     type: event.type,
@@ -1673,7 +1672,7 @@ export async function recordOverageOptionSelected(
   attributes: MetricDefinitions[typeof OVERAGE_OPTION_COUNT]['attributes'],
 ): Promise<void> {
   if (!overageOptionCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   overageOptionCounter.add(1, {
     ...commonAttrs,
     ...attributes,
@@ -1688,7 +1687,7 @@ export async function recordCreditPurchaseClick(
   attributes: MetricDefinitions[typeof CREDIT_PURCHASE_COUNT]['attributes'],
 ): Promise<void> {
   if (!creditPurchaseCounter || !isMetricsInitialized) return;
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   creditPurchaseCounter.add(1, {
     ...commonAttrs,
     ...attributes,
@@ -1713,7 +1712,7 @@ export async function recordBrowserAgentConnection(
   if (!isMetricsInitialized) return;
   if (!browserAgentConnectionDurationHistogram) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   browserAgentConnectionDurationHistogram.record(durationMs, {
     ...commonAttrs,
     session_mode: attributes.session_mode,
@@ -1740,7 +1739,7 @@ export async function recordBrowserAgentToolDiscovery(
 ): Promise<void> {
   if (!isMetricsInitialized) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   if (browserAgentToolsDiscoveredHistogram) {
     browserAgentToolsDiscoveredHistogram.record(toolCount, {
       ...commonAttrs,
@@ -1770,7 +1769,7 @@ export async function recordBrowserAgentVisionStatus(
 ): Promise<void> {
   if (!isMetricsInitialized || !browserAgentVisionStatusCounter) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
   const metricAttributes: Record<string, string | number | boolean> = {
     ...commonAttrs,
     enabled: attributes.enabled,
@@ -1794,7 +1793,7 @@ export async function recordBrowserAgentTaskOutcome(
 ): Promise<void> {
   if (!isMetricsInitialized) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
 
   if (browserAgentTaskOutcomeCounter) {
     browserAgentTaskOutcomeCounter.add(1, {
@@ -1825,7 +1824,7 @@ export async function recordBrowserAgentCleanup(
 ): Promise<void> {
   if (!isMetricsInitialized) return;
 
-  const commonAttrs = await baseMetricDefinition.getCommonAttributes(config);
+  const commonAttrs = baseMetricDefinition.getCommonAttributes(config);
 
   if (browserAgentCleanupDurationHistogram) {
     browserAgentCleanupDurationHistogram.record(durationMs, {

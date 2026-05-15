@@ -113,6 +113,8 @@ function parseOtlpEndpoint(
   }
 }
 
+import { initializeCommonAttributes } from './telemetryAttributes.js';
+
 export async function initializeTelemetry(
   config: Config,
   credentials?: JWTInput,
@@ -120,6 +122,9 @@ export async function initializeTelemetry(
   if (!config.getTelemetryEnabled()) {
     return;
   }
+
+  // Pre-load common attributes (e.g. installation ID)
+  await initializeCommonAttributes();
 
   if (telemetryInitialized) {
     if (

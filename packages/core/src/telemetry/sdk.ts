@@ -6,7 +6,12 @@
 
 import type { JWTInput } from 'google-auth-library';
 import type { Config } from '../config/config.js';
-import { setTelemetrySdkInitialized } from './telemetryBuffer.js';
+import {
+  setTelemetrySdkInitialized,
+  bufferTelemetryEvent,
+} from './telemetryBuffer.js';
+
+export { bufferTelemetryEvent };
 
 let telemetryInitialized = false;
 
