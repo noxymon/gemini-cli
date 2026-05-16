@@ -29,6 +29,11 @@ const HISTORY_SEARCH_WINDOW = 20;
 const FLASH_MODEL = 'flash';
 const PRO_MODEL = 'pro';
 
+const SUPPORTED_CLASSIFIER_MODELS: ReadonlySet<string> = new Set([
+  'gemma3-1b-gpu-custom',
+  'gemma3-1b',
+]);
+
 const COMPLEXITY_RUBRIC = `### Complexity Rubric
 A task is COMPLEX (Choose \`${PRO_MODEL}\`) if it meets ONE OR MORE of the following criteria:
 1.  **High Operational Complexity (Est. 4+ Steps/Tool Calls):** Requires dependent actions, significant planning, or multiple coordinated changes.
@@ -178,9 +183,9 @@ ${formattedHistory}
       return null;
     }
 
-    // Only the gemma3-1b-gpu-custom model has been tested and verified.
-    if (gemmaRouterSettings.classifier?.model !== 'gemma3-1b-gpu-custom') {
-      throw new Error('Only gemma3-1b-gpu-custom has been tested');
+    const classifierModel = gemmaRouterSettings.classifier?.model;
+    if (!classifierModel || !SUPPORTED_CLASSIFIER_MODELS.has(classifierModel)) {
+      throw new Error(`Unsupported classifier model: ${classifierModel}`);
     }
 
     try {

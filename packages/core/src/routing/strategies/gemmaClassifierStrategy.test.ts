@@ -71,7 +71,7 @@ describe('GemmaClassifierStrategy', () => {
     expect(decision).toBeNull();
   });
 
-  it('should throw an error if the model is not gemma3-1b-gpu-custom', async () => {
+  it('should throw an error for unsupported classifier models', async () => {
     vi.mocked(mockConfig.getGemmaModelRouterSettings).mockReturnValue({
       enabled: true,
       classifier: { model: 'other-model' },
@@ -84,8 +84,32 @@ describe('GemmaClassifierStrategy', () => {
         mockBaseLlmClient,
         mockLocalLiteRtLmClient,
       ),
-    ).rejects.toThrow('Only gemma3-1b-gpu-custom has been tested');
+    ).rejects.toThrow('Unsupported classifier model: other-model');
   });
+
+  it.each(['gemma3-1b-gpu-custom', 'gemma3-1b'])(
+    'should accept the supported classifier model %s',
+    async (model) => {
+      vi.mocked(mockConfig.getGemmaModelRouterSettings).mockReturnValue({
+        enabled: true,
+        classifier: { model },
+      });
+      mockGenerateJson.mockResolvedValue({
+        reasoning: 'simple',
+        model_choice: 'flash',
+      });
+
+      const decision = await strategy.route(
+        mockContext,
+        mockConfig,
+        mockBaseLlmClient,
+        mockLocalLiteRtLmClient,
+      );
+
+      expect(decision).not.toBeNull();
+      expect(mockGenerateJson).toHaveBeenCalledOnce();
+    },
+  );
 
   it('should call generateJson with the correct parameters', async () => {
     const mockApiResponse = {
